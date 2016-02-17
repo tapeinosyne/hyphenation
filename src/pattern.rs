@@ -3,7 +3,7 @@
 
 use std::cmp::{max};
 use std::collections::hash_map::{HashMap, Entry};
-use std::iter::{once, repeat};
+use std::iter::{once};
 
 use unicode_normalization::{Recompositions, UnicodeNormalization};
 
@@ -48,7 +48,7 @@ impl Patterns {
         let w = word.to_lowercase();
         let cs = once('.').chain(w.chars()).chain(once('.'));
         let length = cs.clone().count();
-        let mut points: Vec<u32> = repeat(0).take(length + 1).collect();
+        let mut points: Vec<u32> = vec![0; length + 1];
 
         for i in 0..length {
             let mut m = &self.descendants;
