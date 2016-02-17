@@ -1,0 +1,21 @@
+[package]
+name = "hyphenation"
+version = "0.1.0"
+
+authors = ["ndr <ndr@qef.io>"]
+license = "Apache-2.0/MIT"
+readme = "README.md"
+description = "Standard Knuth-Liang hyphenation based on the TeX UTF-8 patterns."
+keywords = ["text", "typesetting"]
+
+homepage = "https://github.com/ndr-qef/hyphenation"
+repository = "https://github.com/ndr-qef/hyphenation"
+
+include = ["patterns/*"]
+
+[dependencies]
+unicode-normalization = "0.1.2"
+
+[dev-dependencies]
+lazy_static = "0.1.15"
+quickcheck = "0.2.25"
