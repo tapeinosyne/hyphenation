@@ -11,7 +11,8 @@ keywords = ["text", "typesetting"]
 homepage = "https://github.com/ndr-qef/hyphenation"
 repository = "https://github.com/ndr-qef/hyphenation"
 
-include = ["**/*.rs", "Cargo.toml", "patterns/*"]
+include = ["src/*", "tests/*", "patterns/*", "Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+
 
 [dependencies]
 unicode-normalization = "0.1.2"
