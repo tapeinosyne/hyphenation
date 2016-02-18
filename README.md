@@ -33,8 +33,8 @@ assert_eq!(s, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
 
 
 ## License
-Copyright © 2016 ndr-qef
-
-Dual-licensed under the terms of either:
+`hyphenation` © 2016 ndr-qef, dual-licensed under the terms of either:
   - The Apache License, Version 2.0
   - The MIT license
+
+`texhyphen` hyphenation patterns © their respective owners; see `lic.txt` files for licensing information.
