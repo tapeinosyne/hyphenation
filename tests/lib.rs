@@ -3,13 +3,16 @@ extern crate lazy_static;
 extern crate quickcheck;
 
 use std::io;
+use std::path::Path;
 use quickcheck::{quickcheck};
 
 extern crate hyphenation;
 use hyphenation::{load, Language, Corpus, Hyphenation, Standard};
 
 
-fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }
+fn fiat_io(lang: Language) -> Corpus {
+    hyphenation::set_pattern_folder(Path::new("patterns"));
+    load::language(lang).unwrap() }
 
 lazy_static! {
     static ref EN_US: Corpus = fiat_io(Language::English_US);

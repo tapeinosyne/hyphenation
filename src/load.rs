@@ -2,18 +2,29 @@
 //! and stored in the `patterns` folder.
 
 use std::fs::File;
-use std::io;
-use std::io::{BufRead, BufReader, Lines};
-use std::path::PathBuf;
+use std::io::{self as io, BufRead, BufReader, Lines};
+use std::path::{Path, PathBuf};
+use std::sync::{RwLock};
 
 use language::{Corpus, Language, mins, tag};
 use exception::{Exceptions};
 use pattern::{Patterns};
 
+lazy_static! {
+    static ref PATTERN_FOLDER: RwLock<PathBuf> = RwLock::new(PathBuf::new());
+}
+
+pub fn set_pattern_folder(path: &Path) {
+    let mut folder = PATTERN_FOLDER.write().unwrap();
+
+    folder.push(path);
+}
 
 pub fn data_file(lang: Language, suffix: &str) -> io::Result<File> {
-    let mut fpath = PathBuf::from("patterns");
     let fname = format!("hyph-{}.{}.txt", tag(lang), suffix);
+    let as_set = PATTERN_FOLDER.read().unwrap();
+    let mut fpath = PathBuf::new();
+    fpath.push(&*as_set);
     fpath.push(fname);
 
     File::open(fpath)

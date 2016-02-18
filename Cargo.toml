@@ -15,8 +15,8 @@ include = ["src/*", "tests/*", "patterns/*", "Cargo.toml", "README.md", "LICENSE
 
 
 [dependencies]
+lazy_static = "0.1.15"
 unicode-normalization = "0.1.2"
 
 [dev-dependencies]
-lazy_static = "0.1.15"
 quickcheck = "0.2.25"

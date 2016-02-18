@@ -1,5 +1,7 @@
 // Forsaken docs justly quibble the vexed programmer's waning zeal
 
+#[macro_use]
+extern crate lazy_static;
 extern crate unicode_normalization;
 
 mod utilia;
@@ -11,4 +13,4 @@ pub mod pattern;
 
 pub use hyphenator::{Hyphenation, Standard};
 pub use language::{Language, Corpus};
-pub use load::language as load;
+pub use load::{set_pattern_folder, language as load};
