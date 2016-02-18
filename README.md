@@ -3,7 +3,7 @@ Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ct
 
 ```toml
 [dependencies]
-hyphenation = "0.1.0"
+hyphenation = "0.1.1"
 ```
 
 
@@ -13,7 +13,11 @@ hyphenation = "0.1.0"
 use hyphenation::{Hyphenation, Standard};
 use hyphenation::Language::{English_US};
 
-// Load hyphenation data for American English.
+// Set the location of the pattern repository,
+// absolute or relative to your executable
+hyphenation::set_pattern_folder(Path::new("./patterns"));
+
+// Load hyphenation data for American English from the pattern repository.
 let english_us = hyphenation::load(English_US).unwrap();
 
 // An iterator that breaks a word according to standard hyphenation practices.
