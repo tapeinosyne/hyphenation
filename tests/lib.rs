@@ -2,7 +2,6 @@
 extern crate lazy_static;
 extern crate quickcheck;
 
-use std::io;
 use std::path::Path;
 use quickcheck::{quickcheck};
 
