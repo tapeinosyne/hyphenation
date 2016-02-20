@@ -20,7 +20,7 @@ pub trait Hyphenation<Hyphenator> where Hyphenator : Iterator {
 
 /// The `Standard` hyphenator iterates over a word, returning slices
 /// delimited by word boundaries and valid hyphenation points.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Standard<'a> {
     word: &'a str,
     opportunities: Vec<usize>,
