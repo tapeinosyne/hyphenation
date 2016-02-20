@@ -42,6 +42,19 @@ fn opportunities_within_bounds() {
 }
 
 #[test]
+fn punctuated_count() {
+    fn property(s: String) -> bool {
+        let l = s.chars().count();
+        let os = s.opportunities(&EN_US);
+        let h: String = s.hyphenate(&EN_US).punctuate().collect();
+
+        h.chars().count() == l + os.len()
+    }
+
+    quickcheck(property as fn(String) -> bool);
+}
+
+#[test]
 fn basics() {
     let h1: Standard = "hyphenation".hyphenate(&EN_US);
     let h2: Standard = "project".hyphenate(&EN_US);
