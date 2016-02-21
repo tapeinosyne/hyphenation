@@ -2,7 +2,7 @@
 extern crate lazy_static;
 extern crate quickcheck;
 
-use std::path::Path;
+use std::path::PathBuf;
 use quickcheck::{quickcheck};
 
 extern crate hyphenation;
@@ -10,8 +10,12 @@ use hyphenation::{load, Language, Corpus, Hyphenation, Standard};
 
 
 fn fiat_io(lang: Language) -> Corpus {
-    hyphenation::set_pattern_folder(Path::new("patterns"));
-    load::language(lang).unwrap() }
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.push("patterns");
+
+    hyphenation::set_pattern_folder(path.as_path());
+    load::language(lang).unwrap()
+}
 
 lazy_static! {
     static ref EN_US: Corpus = fiat_io(Language::English_US);
