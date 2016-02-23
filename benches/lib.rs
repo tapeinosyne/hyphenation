@@ -45,7 +45,6 @@ lazy_static! {
 #[bench]
 fn parse_patterns_en_us(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
-
     let by_line = load::patterns(Language::English_US).unwrap();
     let v: Vec<_> = by_line.collect();
 
@@ -60,7 +59,6 @@ fn parse_patterns_en_us(b: &mut Bencher) {
 #[bench]
 fn parse_exceptions_en_us(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
-
     let by_line = load::exceptions(Language::English_US).unwrap();
     let v: Vec<_> = by_line.collect();
 
@@ -75,7 +73,6 @@ fn parse_exceptions_en_us(b: &mut Bencher) {
 #[bench]
 fn opportunities_words(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
-
     let mut ws = WORDS.iter();
 
     b.iter(|| {
