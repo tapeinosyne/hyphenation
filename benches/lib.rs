@@ -81,3 +81,15 @@ fn opportunities_words(b: &mut Bencher) {
         }
     })
 }
+
+#[bench]
+fn hyphenate_words(b: &mut Bencher) {
+    hyphenation::set_pattern_folder(DATAPATH.as_path());
+    let mut ws = WORDS.iter();
+
+    b.iter(|| {
+        for w in ws.by_ref() {
+            w.hyphenate(&EN_US).count();
+        }
+    })
+}
