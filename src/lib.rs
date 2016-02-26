@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate lazy_static;
+extern crate serde_json;
 extern crate unicode_normalization;
 
 mod utilia;

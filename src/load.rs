@@ -1,14 +1,19 @@
 //! IO operations for pattern and exception data provided by `hyph-UTF8`
 //! and stored in the `patterns` folder.
 
+use std::error;
+use std::fmt;
 use std::fs::File;
-use std::io::{self as io, BufRead, BufReader, Lines};
+use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::{RwLock};
+
+use serde_json::{self as json};
 
 use language::{Corpus, Language, mins, tag};
 use exception::{Exceptions};
 use pattern::{Patterns};
+
 
 lazy_static! {
     static ref PATTERN_FOLDER: RwLock<PathBuf> = RwLock::new(PathBuf::new());
@@ -20,8 +25,9 @@ pub fn set_pattern_folder(path: &Path) {
     folder.push(path);
 }
 
+
 pub fn data_file(lang: Language, suffix: &str) -> io::Result<File> {
-    let fname = format!("hyph-{}.{}.txt", tag(lang), suffix);
+    let fname = format!("hyph-{}.{}.json", tag(lang), suffix);
     let as_set = PATTERN_FOLDER.read().unwrap();
     let mut fpath = PathBuf::new();
     fpath.push(&*as_set);
@@ -30,43 +36,85 @@ pub fn data_file(lang: Language, suffix: &str) -> io::Result<File> {
     File::open(fpath)
 }
 
-pub fn patterns(lang: Language) -> io::Result<Lines<BufReader<File>>> {
+
+/// A pair representing a Knuth-Liang hyphenation pattern. It comprises
+/// alphabetical characters for subword matching and the score of each
+/// hyphenation point.
+pub type KLPair = (String, Vec<u32>);
+
+pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "pat"));
-    let reader = BufReader::new(f);
+    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_reader(f));
 
-    Ok(reader.lines())
+    Ok(pairs)
 }
 
-pub fn exceptions(lang: Language) -> io::Result<Lines<BufReader<File>>> {
+pub fn exceptions(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "hyp"));
-    let reader = BufReader::new(f);
+    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_reader(f));
 
-    Ok(reader.lines())
+    Ok(pairs)
 }
-
 
 /// Constructs the default `Corpus` for a given language.
-pub fn language(lang: Language) -> io::Result<Corpus> {
+pub fn language(lang: Language) -> Result<Corpus, Error> {
     let (l, r) = mins(lang);
-    let pat_by_line = try!(patterns(lang));
-    let ex_by_line = try!(exceptions(lang));
+    let pat_pairs = try!(patterns(lang));
+    let ex_pairs = try!(exceptions(lang));
 
     let mut ps = Patterns::empty();
-    for p in pat_by_line {
-        for val in p { ps.insert(&*val) };
+    for p in pat_pairs {
+        ps.insert(p);
     }
 
     let mut exs = Exceptions::empty();
-    for ex in ex_by_line {
-        for val in ex { exs.insert(&*val) }
+    for ex in ex_pairs {
+        exs.insert(ex);
     }
-    let exs = if !exs.0.is_empty() { Some(exs) } else { None };
 
     Ok(Corpus {
         language: lang,
         patterns: ps,
-        exceptions: exs,
+        exceptions: if !exs.0.is_empty() { Some(exs) } else { None },
         left_min: l,
         right_min: r
     })
+}
+
+
+/// Failure modes of pattern loading.
+#[derive(Debug)]
+pub enum Error {
+    IO(io::Error),
+    Deserialization(json::Error)
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::IO(ref e) => e.fmt(f),
+            Error::Deserialization(ref e) => e.fmt(f)
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match *self {
+            Error::IO(ref e) => e.description(),
+            Error::Deserialization(ref e) => e.description(),
+        }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::IO(err)
+    }
+}
+
+impl From<json::Error> for Error {
+    fn from(err: json::Error) -> Error {
+        Error::Deserialization(err)
+    }
 }

@@ -2,12 +2,15 @@
 
 #[macro_use]
 extern crate lazy_static;
+extern crate serde_json;
 extern crate test;
 
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 use test::Bencher;
+
+use serde_json::{self as json};
 
 extern crate hyphenation;
 use hyphenation::{load, Corpus, Hyphenation, Language};
@@ -42,13 +45,15 @@ lazy_static! {
 #[bench]
 fn parse_patterns_en_us(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
-    let by_line = load::patterns(Language::English_US).unwrap();
-    let v: Vec<_> = by_line.collect();
+    let mut f = load::data_file(Language::English_US, "pat").unwrap();
+    let mut buffer = Vec::new();
+    f.read_to_end(&mut buffer);
 
     let mut ps = Patterns::empty();
     b.iter(|| {
-        for p in &v {
-            for val in p { ps.insert(&*val) };
+        let pairs: Vec<(String, Vec<u32>)> = json::from_slice(&buffer).unwrap();
+        for p in pairs {
+            ps.insert(p);
         }
     });
 }
@@ -56,13 +61,15 @@ fn parse_patterns_en_us(b: &mut Bencher) {
 #[bench]
 fn parse_exceptions_en_us(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
-    let by_line = load::exceptions(Language::English_US).unwrap();
-    let v: Vec<_> = by_line.collect();
+    let mut f = load::data_file(Language::English_US, "hyp").unwrap();
+    let mut buffer = Vec::new();
+    f.read_to_end(&mut buffer);
 
     let mut exs = Exceptions::empty();
     b.iter(|| {
-        for ex in &v {
-            for val in ex { exs.insert(&*val) };
+        let pairs: Vec<(String, Vec<u32>)> = json::from_slice(&buffer).unwrap();
+        for ex in pairs {
+            exs.insert(ex);
         }
     });
 }
