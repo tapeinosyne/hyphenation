@@ -16,10 +16,7 @@ use hyphenation::pattern::{Patterns};
 
 
 fn fiat_io(lang: Language) -> Corpus {
-    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.push("patterns");
-
-    hyphenation::set_pattern_folder(path.as_path());
+    hyphenation::set_pattern_folder(&DATAPATH.as_path());
     load::language(lang).unwrap()
 }
 
