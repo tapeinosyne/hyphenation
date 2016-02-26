@@ -3,7 +3,7 @@ extern crate lazy_static;
 extern crate quickcheck;
 
 use std::path::PathBuf;
-use quickcheck::{quickcheck};
+use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
 use hyphenation::{load, Language, Corpus, Hyphenation, Standard};
@@ -56,6 +56,26 @@ fn punctuated_count() {
     }
 
     quickcheck(property as fn(String) -> bool);
+}
+
+#[test]
+fn hyphenation_bounds() {
+    fn property(s: String) -> TestResult {
+        let ci: Vec<_> = s.char_indices().collect();
+        let (l_min, r_min) = (&EN_US.left_min, &EN_US.right_min);
+        let s_len = ci.len();
+        if s_len < l_min + r_min {
+            return TestResult::discard();
+        }
+
+        let os = s.opportunities(&EN_US);
+        let ((l, _), (r, _)) = (ci[l_min - 1], ci[s_len - r_min]);
+        let within_bounds = |&i| i > l && i <= r;
+
+        TestResult::from_bool(os.iter().all(within_bounds))
+    }
+
+    quickcheck(property as fn(String) -> TestResult);
 }
 
 #[test]
