@@ -7,6 +7,8 @@ use std::iter::{once};
 
 use unicode_normalization::{UnicodeNormalization};
 
+use klpair::KLPair;
+
 
 /// A basic trie, used to associate patterns to their hyphenation scores.
 #[derive(Clone, Debug)]
@@ -25,7 +27,7 @@ impl Patterns {
     }
 
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
-    pub fn insert(&mut self, klpair: (String, Vec<u32>)) {
+    pub fn insert(&mut self, klpair: KLPair) {
         let (p, tally) = klpair;
         let p_norm = p.nfc();
 

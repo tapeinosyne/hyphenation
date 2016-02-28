@@ -10,6 +10,7 @@ use std::sync::{RwLock};
 
 use serde_json::{self as json};
 
+use klpair::KLPair;
 use language::{Corpus, Language, mins, tag};
 use exception::{Exceptions};
 use pattern::{Patterns};
@@ -36,11 +37,6 @@ pub fn data_file(lang: Language, suffix: &str) -> io::Result<File> {
     File::open(fpath)
 }
 
-
-/// A pair representing a Knuth-Liang hyphenation pattern. It comprises
-/// alphabetical characters for subword matching and the score of each
-/// hyphenation point.
-pub type KLPair = (String, Vec<u32>);
 
 pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "pat"));

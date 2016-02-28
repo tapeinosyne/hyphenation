@@ -5,6 +5,8 @@ use std::collections::hash_map::{HashMap};
 
 use unicode_normalization::{UnicodeNormalization};
 
+use klpair::KLPair;
+
 
 /// A specialized hash map of pattern-score pairs.
 #[derive(Clone, Debug)]
@@ -17,7 +19,7 @@ impl Exceptions {
     }
 
     /// Inserts a Knuth-Liang exception pair into the map.
-    pub fn insert(&mut self, klpair: (String, Vec<u32>)) {
+    pub fn insert(&mut self, klpair: KLPair) {
         let (p, tally) = klpair;
         let p_norm: String = p.nfc().collect();
         let Exceptions(ref mut m) = *self;

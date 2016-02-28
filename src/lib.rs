@@ -5,6 +5,7 @@ extern crate lazy_static;
 extern crate serde_json;
 extern crate unicode_normalization;
 
+mod klpair;
 mod utilia;
 pub mod exception;
 pub mod hyphenator;
