@@ -2,7 +2,9 @@
 extern crate lazy_static;
 extern crate quickcheck;
 
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
+use std::path::{Path, PathBuf};
 use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
@@ -10,15 +12,26 @@ use hyphenation::{load, Language, Corpus, Hyphenation, Standard};
 
 
 fn fiat_io(lang: Language) -> Corpus {
-    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.push("patterns");
-
-    hyphenation::set_pattern_folder(path.as_path());
+    hyphenation::set_pattern_folder(&DATAPATH.as_path());
     load::language(lang).unwrap()
 }
 
 lazy_static! {
+    static ref DATAPATH: PathBuf = {
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("patterns");
+
+        path
+    };
+
     static ref EN_US: Corpus = fiat_io(Language::English_US);
+
+    static ref WORDS: Vec<String> = {
+        let file = File::open(Path::new("/usr/share/dict/words")).unwrap();
+        let words: Vec<_> = BufReader::new(file).lines().map(|l| l.unwrap()).collect();
+
+        words
+    };
 }
 
 
