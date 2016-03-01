@@ -1,5 +1,6 @@
 // Forsaken docs justly quibble the vexed programmer's waning zeal
 
+extern crate fnv;
 #[macro_use]
 extern crate lazy_static;
 extern crate serde_json;

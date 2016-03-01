@@ -3,8 +3,10 @@
 
 use std::cmp::{max};
 use std::collections::hash_map::{HashMap, Entry};
+use std::hash::BuildHasherDefault;
 use std::iter::{once};
 
+use fnv::FnvHasher;
 use unicode_normalization::{UnicodeNormalization};
 
 use klpair::KLPair;
@@ -14,15 +16,17 @@ use klpair::KLPair;
 #[derive(Clone, Debug)]
 pub struct Patterns {
     pub tally: Option<Vec<u32>>,
-    pub descendants: HashMap<char, Patterns>
+    pub descendants: HashMap<char, Patterns, BuildHasherDefault<FnvHasher>>
 }
 
 impl Patterns {
     /// Creates an empty `Patterns` trie.
     pub fn empty() -> Patterns {
+        let fnv = BuildHasherDefault::<FnvHasher>::default();
+
         Patterns {
             tally: None,
-            descendants: HashMap::new()
+            descendants: HashMap::with_hasher(fnv)
         }
     }
 
