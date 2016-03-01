@@ -19,10 +19,10 @@ pub trait Hyphenation<Hyphenator> where Hyphenator : Iterator {
 
 
 /// The `Standard` hyphenator iterates over a word, returning slices
-/// delimited by word boundaries and valid hyphenation points.
+/// delimited by string boundaries and valid hyphenation points.
 #[derive(Clone, Debug)]
 pub struct Standard<'a> {
-    word: &'a str,
+    text: &'a str,
     opportunities: Vec<usize>,
     prior: usize,
     i: usize
@@ -47,12 +47,12 @@ impl<'a> Iterator for Standard<'a> {
             Some(&end) => {
                 self.prior = end;
                 self.i = i + 1;
-                Some(&self.word[start .. end])
+                Some(&self.text[start .. end])
             },
             None => {
                 if i <= self.opportunities.len() {
                     self.i = i + 1;
-                    Some(&self.word[start ..])
+                    Some(&self.text[start ..])
                 } else {
                     None
                 }
@@ -89,7 +89,7 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
         let os = self.opportunities(corp);
 
         Standard {
-            word: self,
+            text: self,
             opportunities: os,
             prior: 0,
             i: 0
