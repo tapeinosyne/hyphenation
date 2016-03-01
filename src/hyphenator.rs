@@ -2,6 +2,8 @@
 
 use std::borrow::Cow;
 
+use unicode_segmentation::UnicodeSegmentation;
+
 use language::{Corpus};
 use utilia::{Interspersable, Intersperse};
 
@@ -64,24 +66,31 @@ impl<'a> Iterator for Standard<'a> {
 
 impl<'a> Hyphenation<Standard<'a>> for &'a str {
     fn opportunities(self, corp: &Corpus) -> Vec<usize> {
-        if self.chars().count() < corp.left_min + corp.right_min {
+        let (l_min, r_min) = (corp.left_min, corp.right_min);
+        let length_min = l_min + r_min;
+
+        if self.chars().count() < length_min {
             return vec![];
         }
 
-        let pts = match corp.exceptions.iter()
-                            .filter_map(|exs| exs.score(self))
-                            .next() {
-                Some(vec) => Cow::Borrowed(vec),
-                None => Cow::Owned(corp.patterns.score(self))
-        };
+        let by_word = self.split_word_bound_indices();
 
-        let (l, r) = (corp.left_min, pts.len() - corp.right_min + 1);
+        by_word.flat_map(|(i, word)| {
+            let pts = match corp.exceptions.iter()
+                                .filter_map(|exs| exs.score(word))
+                                .next() {
+                    Some(vec) => Cow::Borrowed(vec),
+                    None => Cow::Owned(corp.patterns.score(word))
+            }.into_owned();
+            let length = pts.len();
+            let l = l_min;
+            let r = if length >= length_min { length - l_min - r_min + 1 } else { 0 };
 
-        self.char_indices().skip(l)
-            .zip(&pts[l .. r])
-            .filter(|&(_, p)| p % 2 != 0)
-            .map(|((i, _), _)| i)
-            .collect()
+            word.char_indices().skip(l)
+                .zip(pts.into_iter().skip(l).take(r))
+                .filter(|&(_, p)| p % 2 != 0)
+                .map(move |((i1, _), _)| i1 + i)
+        }).collect()
     }
 
 
