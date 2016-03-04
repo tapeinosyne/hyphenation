@@ -8,20 +8,23 @@ use language::{Corpus};
 use utilia::{Interspersable, Intersperse};
 
 pub trait Hyphenation<Hyphenator> where Hyphenator : Iterator {
-    /// Returns the byte indices of valid hyphenation points within a word.
+    /// Returns the indices of valid hyphenation points within the text.
     fn opportunities(self, corp: &Corpus) -> Vec<usize>;
 
-    /// Returns an iterator over orthographic syllables separated by valid
+    /// Returns an iterator over segments of the text separated by valid
     /// hyphenation points.
     ///
-    /// Note that, in some orthographies, the syllables of a hyphenated word
-    /// are not necessarily substrings of the original word.
+    /// When iterating over a word, such segments coincide with orthographic
+    /// syllables. Note that, in some orthographies, the syllables of a hyphenated
+    /// word are not necessarily substrings of the original word.
     fn hyphenate(self, corp: &Corpus) -> Hyphenator;
 }
 
 
-/// The `Standard` hyphenator iterates over a word, returning slices
+/// The `Standard` hyphenator iterates over a string, returning slices
 /// delimited by string boundaries and valid hyphenation points.
+///
+/// For individual words, such slices coincide with orthographic syllables.
 #[derive(Clone, Debug)]
 pub struct Standard<'a> {
     text: &'a str,
@@ -31,7 +34,7 @@ pub struct Standard<'a> {
 }
 
 impl<'a> Standard<'a> {
-    // Inserts a soft hyphen at hyphenation points.
+    /// Inserts a soft hyphen at hyphenation points.
     pub fn punctuate(self) -> Intersperse<Self> {
         self.intersperse("\u{ad}")
     }
@@ -65,6 +68,7 @@ impl<'a> Iterator for Standard<'a> {
 
 
 impl<'a> Hyphenation<Standard<'a>> for &'a str {
+    /// Returns the byte indices of valid hyphenation points within the string.
     fn opportunities(self, corp: &Corpus) -> Vec<usize> {
         let (l_min, r_min) = (corp.left_min, corp.right_min);
         let length_min = l_min + r_min;
@@ -93,7 +97,8 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
         }).collect()
     }
 
-
+    /// Returns an iterator over string slices separated by valid hyphenation
+    /// points.
     fn hyphenate(self, corp: &Corpus) -> Standard<'a> {
         let os = self.opportunities(corp);
 

@@ -8,9 +8,8 @@ use pattern::{Patterns};
 
 /// A `Corpus` carries hyphenation data and parameters.
 ///
-/// It comprises the working language, the set of available patterns and
-/// exceptions, as well as the minimum number of characters which shall not
-/// be hyphenated from the beginning and end of a word.
+/// It comprises the working language, the set of applicable patterns and
+/// exceptions, as well as the left and right intra-word hyphenation boundaries.
 #[derive(Clone, Debug)]
 pub struct Corpus {
     pub language: Language,
@@ -182,7 +181,7 @@ pub fn tag(lang: Language) -> &'static str {
 }
 
 /// The default number of characters from the start and end of a word
-/// after which we cannot hyphenate.
+/// which shall not be hyphenated.
 pub fn mins(lang: Language) -> (usize, usize) {
     match lang {
         Afrikaans => (1, 2),
