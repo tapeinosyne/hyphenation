@@ -38,6 +38,11 @@ impl<'a> Standard<'a> {
     pub fn punctuate(self) -> Intersperse<Self> {
         self.intersperse("\u{ad}")
     }
+
+    /// Inserts a given string at hyphenation points.
+    pub fn punctuate_with(self, mark: &'a str) -> Intersperse<Self> {
+        self.intersperse(mark)
+    }
 }
 
 
