@@ -105,11 +105,9 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
     /// Returns an iterator over string slices separated by valid hyphenation
     /// points.
     fn hyphenate(self, corp: &Corpus) -> Standard<'a> {
-        let os = self.opportunities(corp);
-
         Standard {
             text: self,
-            opportunities: os,
+            opportunities: self.opportunities(corp),
             prior: 0,
             i: 0
         }
