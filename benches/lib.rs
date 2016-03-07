@@ -75,7 +75,7 @@ fn parse_exceptions_en_us(b: &mut Bencher) {
 }
 
 #[bench]
-fn opportunities_words(b: &mut Bencher) {
+fn opportunities_en_us(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
     let mut ws = WORDS.iter();
 
@@ -87,7 +87,7 @@ fn opportunities_words(b: &mut Bencher) {
 }
 
 #[bench]
-fn hyphenate_words(b: &mut Bencher) {
+fn hyphenate_en_us(b: &mut Bencher) {
     hyphenation::set_pattern_folder(DATAPATH.as_path());
     let mut ws = WORDS.iter();
 
