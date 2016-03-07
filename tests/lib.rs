@@ -96,13 +96,16 @@ fn basics() {
     let h1: Standard = "hyphenation".hyphenate(&EN_US);
     let h2: Standard = "project".hyphenate(&EN_US);
     let h3: Standard = "hypha".hyphenate(&EN_US);
+    let h4: Standard = "Word hyphenation by computer.".hyphenate(&EN_US);
 
     let v1: Vec<&str> = h1.clone().collect();
     let v2: Vec<&str> = h2.clone().collect();
     let v3: Vec<&str> = h3.clone().collect();
+    let v4: Vec<&str> = h4.clone().collect();
     assert_eq!(v1, vec!["hy", "phen", "ation"]);
     assert_eq!(v2, vec!["project"]);
     assert_eq!(v3, vec!["hy", "pha"]);
+    assert_eq!(v4, vec!["Word hy", "phen", "ation by com", "puter."]);
 
     let s1: String = h1.punctuate().collect();
     assert_eq!(s1, "hy\u{ad}phen\u{ad}ation".to_owned());
