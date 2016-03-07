@@ -3,7 +3,7 @@ Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ct
 
 ```toml
 [dependencies]
-hyphenation = "0.2.0"
+hyphenation = "0.3.0"
 ```
 
 
@@ -28,11 +28,18 @@ let h: Standard = "hyphenation".hyphenate(&english_us);
 let v: Vec<&str> = h.collect();
 assert_eq!(v, vec!["hy", "phen", "ation"]);
 
+// Hyphenators work with full text as well as individual words.
+let h2: Standard = "Word hyphenation by computer.".hyphenate(&english_us);
+let v2: Vec<&str> = h2.collect();
+assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
+
 // Mark hyphenation opportunities with soft hyphens,
 // and render the result to a new String.
-let h1 = "anfractuous".hyphenate(&english_us);
+let h2 = "anfractuous".hyphenate(&english_us);
 let s: String = h1.punctuate().collect();
 assert_eq!(s, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
+
+
 ```
 
 
