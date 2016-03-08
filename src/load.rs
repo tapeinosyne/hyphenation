@@ -20,6 +20,7 @@ lazy_static! {
     static ref PATTERN_FOLDER: RwLock<PathBuf> = RwLock::new(PathBuf::new());
 }
 
+/// Sets the folder where pattern and exception data are stored.
 pub fn set_pattern_folder(path: &Path) {
     let mut folder = PATTERN_FOLDER.write().unwrap();
 
