@@ -15,11 +15,11 @@ include = ["src/*", "tests/*", "patterns/*", "Cargo.toml", "README.md", "LICENSE
 
 
 [dependencies]
-fnv = "~1.0"
-lazy_static = "~0.1"
-serde_json = "~0.7"
-unicode-normalization = "~0.1"
-unicode-segmentation = "~0.1"
+fnv = "^1.0"
+lazy_static = "^0.1"
+serde_json = "^0.7"
+unicode-normalization = "^0.1"
+unicode-segmentation = "^0.1"
 
 [dev-dependencies]
-quickcheck = "~0.2.25"
+quickcheck = "^0.2"
