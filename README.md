@@ -38,9 +38,24 @@ assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
 let h2 = "anfractuous".hyphenate(&english_us);
 let s: String = h1.punctuate().collect();
 assert_eq!(s, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
-
-
 ```
+
+
+### Unicode Normalization
+`hyphenation` operates on strings in Normalization Form C, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate.
+
+This form is ubiquitous, and you probably need not worry about it. Nevertheless, it would be best to ensure NFC when working with any of the following languages:
+
+- Assamese
+- Bengali
+- Greek (Ancient, Monotonic, Polytonic)
+- Punjabi
+- Sanskrit
+
+
+## Pattern Data
+
+The script used to parse, normalize, and convert the TeX hyphenation patterns may be found at [ndr-qef/hyph-utf8.json](https://github.com/ndr-qef/hyph-utf8.json).
 
 
 ## License
