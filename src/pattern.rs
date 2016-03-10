@@ -7,7 +7,6 @@ use std::hash::BuildHasherDefault;
 use std::iter::{once};
 
 use fnv::FnvHasher;
-use unicode_normalization::{UnicodeNormalization};
 
 use klpair::KLPair;
 
@@ -33,9 +32,8 @@ impl Patterns {
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     pub fn insert(&mut self, klpair: KLPair) {
         let (p, tally) = klpair;
-        let p_norm = p.nfc();
 
-        let node = p_norm.fold(self, |t, c| {
+        let node = p.chars().fold(self, |t, c| {
             match t.descendants.entry(c) {
                 Entry::Vacant(e) => e.insert(Patterns::empty()),
                 Entry::Occupied(e) => e.into_mut()

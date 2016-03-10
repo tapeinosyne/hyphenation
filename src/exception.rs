@@ -3,8 +3,6 @@
 
 use std::collections::hash_map::{HashMap};
 
-use unicode_normalization::{UnicodeNormalization};
-
 use klpair::KLPair;
 
 
@@ -21,10 +19,9 @@ impl Exceptions {
     /// Inserts a Knuth-Liang exception pair into the map.
     pub fn insert(&mut self, klpair: KLPair) {
         let (p, tally) = klpair;
-        let p_norm: String = p.nfc().collect();
         let Exceptions(ref mut m) = *self;
 
-        m.insert(p_norm, tally);
+        m.insert(p, tally);
     }
 
     /// Retrieves the score for each hyphenation point of `word`.

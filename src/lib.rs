@@ -4,7 +4,6 @@ extern crate fnv;
 #[macro_use]
 extern crate lazy_static;
 extern crate serde_json;
-extern crate unicode_normalization;
 extern crate unicode_segmentation;
 
 mod klpair;
