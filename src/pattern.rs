@@ -5,6 +5,7 @@ use std::cmp::{max};
 use std::collections::hash_map::{HashMap, Entry};
 use std::hash::BuildHasherDefault;
 use std::iter::{once};
+use std::mem;
 
 use fnv::FnvHasher;
 
@@ -30,7 +31,9 @@ impl Patterns {
     }
 
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
-    pub fn insert(&mut self, klpair: KLPair) {
+    ///
+    /// If the pattern already existed, the old tally is returned; if not, `None` is.
+    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u32>>{
         let (p, tally) = klpair;
 
         let node = p.chars().fold(self, |t, c| {
@@ -40,7 +43,17 @@ impl Patterns {
             }
         });
 
-        node.tally = Some(tally);
+        let mut retv = None;
+        match node.tally {
+            Some(ref mut old) => {
+                retv = Some(mem::replace(old, tally));
+            },
+            None => {
+                node.tally = Some(tally);
+            }
+        }
+
+        retv
     }
 
     /// Assigns a score to each potential hyphenation point.

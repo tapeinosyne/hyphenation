@@ -17,11 +17,13 @@ impl Exceptions {
     }
 
     /// Inserts a Knuth-Liang exception pair into the map.
-    pub fn insert(&mut self, klpair: KLPair) {
-        let (p, tally) = klpair;
+    ///
+    /// If the pattern already existed, the old score is returned; if not, `None` is.
+    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u32>> {
+        let (p, score) = klpair;
         let Exceptions(ref mut m) = *self;
 
-        m.insert(p, tally);
+        m.insert(p, score)
     }
 
     /// Retrieves the score for each hyphenation point of `word`.
