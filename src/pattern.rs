@@ -1,6 +1,7 @@
 //! Data structures and methods for parsing and applying Knuth-Liang
 //! hyphenation patterns.
 
+use std::borrow::Cow;
 use std::cmp::{max};
 use std::collections::hash_map::{HashMap, Entry};
 use std::hash::BuildHasherDefault;
@@ -61,7 +62,10 @@ impl Patterns {
     /// All patterns matching a substring of `word` are compounded, and for
     /// each hyphenation point, the highest competing value is selected.
     pub fn score(&self, word: &str) -> Vec<u32> {
-        let w = word.to_lowercase();
+        let w = match word.chars().any(|c| c.is_uppercase()) {
+            true => Cow::Owned(word.to_lowercase()),
+            false => Cow::Borrowed(word)
+        };
         let cs = once('.').chain(w.chars()).chain(once('.'));
         let length = cs.clone().count();
         let mut points: Vec<u32> = vec![0; length + 1];
