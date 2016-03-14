@@ -1,3 +1,7 @@
+## 0.3.2
+- Hyphenation of lowercase words is ~10% faster.
+- `Patterns` and `Exceptions` now return preexisting values on `insert()`, analogously to HashMap.
+
 ## 0.3.1
 - Language loading time is halved.
 
