@@ -11,8 +11,7 @@ use klpair::KLPair;
 use language::{Corpus, Language, mins, tag};
 use exception::{Exceptions};
 use pattern::{Patterns};
-
-include!(concat!(env!("OUT_DIR"), "/pocket-resources.rs"));
+use resources::ResourceId;
 
 
 pub fn data_file(lang: Language, suffix: &str) -> io::Result<&[u8]> {
