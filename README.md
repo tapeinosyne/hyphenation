@@ -3,7 +3,7 @@ Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ct
 
 ```toml
 [dependencies]
-hyphenation = "0.3.2"
+hyphenation = "0.4.0"
 ```
 
 [Documentation](https://ndr-qef.github.io/hyphenation)
@@ -14,10 +14,6 @@ hyphenation = "0.3.2"
 ```rust
 use hyphenation::{Hyphenation, Standard};
 use hyphenation::Language::{English_US};
-
-// Set the location of the pattern repository,
-// absolute or relative to your executable
-hyphenation::set_pattern_folder(Path::new("./patterns"));
 
 // Load hyphenation data for American English from the pattern repository.
 let english_us = hyphenation::load(English_US).unwrap();
@@ -37,9 +33,9 @@ assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
 
 // Mark hyphenation opportunities with soft hyphens,
 // and render the result to a new String.
-let h2 = "anfractuous".hyphenate(&english_us);
-let s: String = h1.punctuate().collect();
-assert_eq!(s, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
+let h3 = "anfractuous".hyphenate(&english_us);
+let s3: String = h3.punctuate().collect();
+assert_eq!(s3, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
 ```
 
 

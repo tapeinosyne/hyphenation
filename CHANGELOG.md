@@ -1,3 +1,6 @@
+## 0.4.0
+- The pattern repository is now bundled with the crate, and no longer requires manual initialization.
+
 ## 0.3.2
 - Hyphenation of lowercase words is ~10% faster.
 - `Patterns` and `Exceptions` now return preexisting values on `insert()`, analogously to HashMap.
