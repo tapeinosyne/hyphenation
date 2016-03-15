@@ -14,13 +14,14 @@ use pattern::{Patterns};
 use resources::ResourceId;
 
 
-pub fn data_file(lang: Language, suffix: &str) -> io::Result<&[u8]> {
+pub fn data_file(lang: Language, suffix: &str) -> Result<&[u8], Error> {
     let fname = format!("hyph-{}.{}.json", tag(lang), suffix);
-    let data: &[u8] = ResourceId::from_name(&fname)
-                                .expect(&format!("Failed to load pattern data for {:?}", lang))
-                                .load();
+    let res: Option<ResourceId> = ResourceId::from_name(&fname);
 
-    Ok(data)
+    match res {
+        Some(data) => Ok(data.load()),
+        None => Err(Error::Resource)
+    }
 }
 
 pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
@@ -67,16 +68,8 @@ pub fn language(lang: Language) -> Result<Corpus, Error> {
 #[derive(Debug)]
 pub enum Error {
     IO(io::Error),
-    Deserialization(json::Error)
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Error::IO(ref e) => e.fmt(f),
-            Error::Deserialization(ref e) => e.fmt(f)
-        }
-    }
+    Deserialization(json::Error),
+    Resource
 }
 
 impl error::Error for Error {
@@ -84,6 +77,20 @@ impl error::Error for Error {
         match *self {
             Error::IO(ref e) => e.description(),
             Error::Deserialization(ref e) => e.description(),
+            Error::Resource => "Pattern resource failed to load"
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Error::IO(ref e) => e.fmt(f),
+            Error::Deserialization(ref e) => e.fmt(f),
+            Error::Resource => {
+                let e = self as &error::Error;
+                e.description().fmt(f)
+            }
         }
     }
 }
