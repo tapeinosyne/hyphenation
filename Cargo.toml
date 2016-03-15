@@ -1,6 +1,6 @@
 [package]
 name = "hyphenation"
-version = "0.3.2"
+version = "0.4.0"
 
 authors = ["ndr <ndr@qef.io>"]
 license = "Apache-2.0/MIT"
@@ -11,14 +11,20 @@ keywords = ["text", "typesetting"]
 homepage = "https://github.com/ndr-qef/hyphenation"
 repository = "https://github.com/ndr-qef/hyphenation"
 
-include = ["src/*", "tests/*", "patterns/*", "Cargo.toml", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
+include = [ "Cargo.toml", "build.rs", "src/*", "tests/*", "benches/*"
+          , "patterns/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT" ]
+
+build = "build.rs"
 
 
 [dependencies]
 fnv = "^1.0"
-lazy_static = "^0.1"
 serde_json = "^0.7"
 unicode-segmentation = "^0.1"
 
+[build-dependencies]
+pocket-resources = "^0.3"
+
 [dev-dependencies]
+lazy_static = "^0.1"
 quickcheck = "^0.2"
