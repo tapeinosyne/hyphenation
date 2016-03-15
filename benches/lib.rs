@@ -7,7 +7,7 @@ extern crate test;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use test::Bencher;
 
 use serde_json::{self as json};
@@ -18,19 +18,9 @@ use hyphenation::exception::{Exceptions};
 use hyphenation::pattern::{Patterns};
 
 
-fn fiat_io(lang: Language) -> Corpus {
-    hyphenation::set_pattern_folder(&DATAPATH.as_path());
-    load::language(lang).unwrap()
-}
+fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }
 
 lazy_static! {
-    static ref DATAPATH: PathBuf = {
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push("patterns");
-
-        path
-    };
-
     static ref EN_US: Corpus = fiat_io(Language::English_US);
 
     static ref WORDS: Vec<String> = {
@@ -44,7 +34,6 @@ lazy_static! {
 
 #[bench]
 fn parse_patterns_en_us(b: &mut Bencher) {
-    hyphenation::set_pattern_folder(DATAPATH.as_path());
     let mut f = load::data_file(Language::English_US, "pat").unwrap();
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer);
@@ -60,7 +49,6 @@ fn parse_patterns_en_us(b: &mut Bencher) {
 
 #[bench]
 fn parse_exceptions_en_us(b: &mut Bencher) {
-    hyphenation::set_pattern_folder(DATAPATH.as_path());
     let mut f = load::data_file(Language::English_US, "hyp").unwrap();
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer);
@@ -76,7 +64,6 @@ fn parse_exceptions_en_us(b: &mut Bencher) {
 
 #[bench]
 fn opportunities_en_us(b: &mut Bencher) {
-    hyphenation::set_pattern_folder(DATAPATH.as_path());
     let mut ws = WORDS.iter();
 
     b.iter(|| {
@@ -88,7 +75,6 @@ fn opportunities_en_us(b: &mut Bencher) {
 
 #[bench]
 fn hyphenate_en_us(b: &mut Bencher) {
-    hyphenation::set_pattern_folder(DATAPATH.as_path());
     let mut ws = WORDS.iter();
 
     b.iter(|| {

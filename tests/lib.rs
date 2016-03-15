@@ -4,26 +4,16 @@ extern crate quickcheck;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
 use hyphenation::{load, Language, Corpus, Hyphenation, Standard};
 
 
-fn fiat_io(lang: Language) -> Corpus {
-    hyphenation::set_pattern_folder(&DATAPATH.as_path());
-    load::language(lang).unwrap()
-}
+fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }
 
 lazy_static! {
-    static ref DATAPATH: PathBuf = {
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push("patterns");
-
-        path
-    };
-
     static ref EN_US: Corpus = fiat_io(Language::English_US);
 
     static ref WORDS: Vec<String> = {
