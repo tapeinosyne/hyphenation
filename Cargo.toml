@@ -4,12 +4,13 @@ version = "0.4.0"
 
 authors = ["ndr <ndr@qef.io>"]
 license = "Apache-2.0/MIT"
+homepage = "https://github.com/ndr-qef/hyphenation"
+repository = "https://github.com/ndr-qef/hyphenation"
+
 readme = "README.md"
 description = "Standard Knuth-Liang hyphenation based on the TeX UTF-8 patterns."
 keywords = ["text", "typesetting"]
 
-homepage = "https://github.com/ndr-qef/hyphenation"
-repository = "https://github.com/ndr-qef/hyphenation"
 
 include = [ "Cargo.toml", "build.rs", "src/*", "tests/*", "benches/*"
           , "patterns/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT" ]
