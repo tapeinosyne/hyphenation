@@ -3,10 +3,7 @@
 
 use std::error;
 use std::fmt;
-use std::fs::File;
 use std::io;
-use std::path::{Path, PathBuf};
-use std::sync::{RwLock};
 
 use serde_json::{self as json};
 
@@ -15,33 +12,21 @@ use language::{Corpus, Language, mins, tag};
 use exception::{Exceptions};
 use pattern::{Patterns};
 
-
-lazy_static! {
-    static ref PATTERN_FOLDER: RwLock<PathBuf> = RwLock::new(PathBuf::new());
-}
-
-/// Sets the folder where pattern and exception data are stored.
-pub fn set_pattern_folder(path: &Path) {
-    let mut folder = PATTERN_FOLDER.write().unwrap();
-
-    folder.push(path);
-}
+include!(concat!(env!("OUT_DIR"), "/pocket-resources.rs"));
 
 
-pub fn data_file(lang: Language, suffix: &str) -> io::Result<File> {
+pub fn data_file(lang: Language, suffix: &str) -> io::Result<&[u8]> {
     let fname = format!("hyph-{}.{}.json", tag(lang), suffix);
-    let as_set = PATTERN_FOLDER.read().unwrap();
-    let mut fpath = PathBuf::new();
-    fpath.push(&*as_set);
-    fpath.push(fname);
+    let data: &[u8] = ResourceId::from_name(&fname)
+                                .expect(&format!("Failed to load pattern data for {:?}", lang))
+                                .load();
 
-    File::open(fpath)
+    Ok(data)
 }
-
 
 pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "pat"));
-    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_reader(f));
+    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_slice(f));
 
     Ok(pairs)
 }
