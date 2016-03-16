@@ -46,12 +46,8 @@ impl Patterns {
 
         let mut retv = None;
         match node.tally {
-            Some(ref mut old) => {
-                retv = Some(mem::replace(old, tally));
-            },
-            None => {
-                node.tally = Some(tally);
-            }
+            Some(ref mut old) => retv = Some(mem::replace(old, tally)),
+            None => node.tally = Some(tally)
         }
 
         retv

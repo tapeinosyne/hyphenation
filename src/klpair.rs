@@ -1,6 +1,5 @@
 //! Internal intermediate representation for Knuth-Liang hyphenation patterns.
 
-
 /// A pair representing a Knuth-Liang hyphenation pattern. It comprises
 /// alphabetical characters for subword matching and the score of each
 /// hyphenation point.

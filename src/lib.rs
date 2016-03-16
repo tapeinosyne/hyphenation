@@ -71,7 +71,6 @@
 //! assert_eq!(indices, vec![2, 6]);
 //! ```
 
-
 extern crate fnv;
 extern crate serde_json;
 extern crate unicode_segmentation;
