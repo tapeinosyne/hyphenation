@@ -3,7 +3,7 @@ Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ct
 
 ```toml
 [dependencies]
-hyphenation = "0.4.0"
+hyphenation = "0.4.1"
 ```
 
 [Documentation](https://ndr-qef.github.io/hyphenation)
