@@ -33,7 +33,7 @@ pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
 
 pub fn exceptions(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "hyp"));
-    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_reader(f));
+    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_slice(f));
 
     Ok(pairs)
 }
