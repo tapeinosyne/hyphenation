@@ -40,7 +40,7 @@ fn parse_patterns_en_us(b: &mut Bencher) {
 
     let mut ps = Patterns::empty();
     b.iter(|| {
-        let pairs: Vec<(String, Vec<u32>)> = json::from_slice(&buffer).unwrap();
+        let pairs: Vec<(String, Vec<u8>)> = json::from_slice(&buffer).unwrap();
         for p in pairs {
             ps.insert(p);
         }
@@ -55,7 +55,7 @@ fn parse_exceptions_en_us(b: &mut Bencher) {
 
     let mut exs = Exceptions::empty();
     b.iter(|| {
-        let pairs: Vec<(String, Vec<u32>)> = json::from_slice(&buffer).unwrap();
+        let pairs: Vec<(String, Vec<u8>)> = json::from_slice(&buffer).unwrap();
         for ex in pairs {
             exs.insert(ex);
         }

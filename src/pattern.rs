@@ -20,7 +20,7 @@ pub type KLPair = (String, Vec<u8>);
 /// A basic trie, used to associate patterns to their hyphenation scores.
 #[derive(Clone, Debug)]
 pub struct Patterns {
-    pub tally: Option<Vec<u32>>,
+    pub tally: Option<Vec<u8>>,
     pub descendants: HashMap<char, Patterns, BuildHasherDefault<FnvHasher>>
 }
 
@@ -38,7 +38,7 @@ impl Patterns {
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     ///
     /// If the pattern already existed, the old tally is returned; if not, `None` is.
-    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u32>>{
+    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>>{
         let (p, tally) = klpair;
 
         let node = p.chars().fold(self, |t, c| {
@@ -61,7 +61,7 @@ impl Patterns {
     ///
     /// All patterns matching a substring of `word` are compounded, and for
     /// each hyphenation point, the highest competing value is selected.
-    pub fn score(&self, word: &str) -> Vec<u32> {
+    pub fn score(&self, word: &str) -> Vec<u8> {
         let w = match word.chars().any(|c| c.is_uppercase()) {
             true => Cow::Owned(word.to_lowercase()),
             false => Cow::Borrowed(word)

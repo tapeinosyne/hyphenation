@@ -25,14 +25,14 @@ pub fn data_file(lang: Language, suffix: &str) -> Result<&[u8], Error> {
 
 pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "pat"));
-    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_slice(f));
+    let pairs: Vec<(String, Vec<u8>)> = try!(json::from_slice(f));
 
     Ok(pairs)
 }
 
 pub fn exceptions(lang: Language) -> Result<Vec<KLPair>, Error> {
     let f = try!(data_file(lang, "hyp"));
-    let pairs: Vec<(String, Vec<u32>)> = try!(json::from_slice(f));
+    let pairs: Vec<(String, Vec<u8>)> = try!(json::from_slice(f));
 
     Ok(pairs)
 }
