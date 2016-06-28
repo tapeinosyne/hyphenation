@@ -75,7 +75,6 @@ extern crate fnv;
 extern crate serde_json;
 extern crate unicode_segmentation;
 
-mod klpair;
 mod resources;
 mod utilia;
 pub mod exception;

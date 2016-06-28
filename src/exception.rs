@@ -3,7 +3,7 @@
 
 use std::collections::hash_map::{HashMap};
 
-use klpair::KLPair;
+use pattern::KLPair;
 
 
 /// A specialized hash map of pattern-score pairs.

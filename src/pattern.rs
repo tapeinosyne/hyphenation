@@ -10,7 +10,11 @@ use std::mem;
 
 use fnv::FnvHasher;
 
-use klpair::KLPair;
+
+/// A pair representing a Knuth-Liang hyphenation pattern. It comprises
+/// alphabetical characters for subword matching and the score of each
+/// hyphenation point.
+pub type KLPair = (String, Vec<u8>);
 
 
 /// A basic trie, used to associate patterns to their hyphenation scores.

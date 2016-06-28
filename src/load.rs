@@ -7,10 +7,9 @@ use std::io;
 
 use serde_json::{self as json};
 
-use klpair::KLPair;
 use language::{Corpus, Language, mins, tag};
 use exception::{Exceptions};
-use pattern::{Patterns};
+use pattern::{KLPair, Patterns};
 use resources::ResourceId;
 
 
