@@ -83,22 +83,22 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
         }
 
         let by_word = self.split_word_bound_indices();
-
         by_word.flat_map(|(i, word)| {
             let pts = match corp.exceptions.iter()
-                                .filter_map(|exs| exs.score(word))
-                                .next() {
-                    Some(vec) => Cow::Borrowed(vec),
-                    None => Cow::Owned(corp.patterns.score(word))
+                                    .filter_map(|exs| exs.score(word))
+                                    .next() {
+                        Some(vec) => Cow::Borrowed(vec),
+                        None => Cow::Owned(corp.patterns.score(word))
             }.into_owned();
-            let length = pts.len();
+
+            let hyph_length = pts.len();
             let l = l_min;
-            let r = if length >= length_min { length - l_min - r_min + 1 } else { 0 };
+            let r = if hyph_length >= length_min - 1 { hyph_length + 2 - length_min } else { 0 };
 
             word.char_indices().skip(l)
-                .zip(pts.into_iter().skip(l).take(r))
+                .zip(pts.into_iter().skip(l - 1).take(r))
                 .filter(|&(_, p)| p % 2 != 0)
-                .map(move |((i1, _), _)| i1 + i)
+                .map(move |((i1, _), _)| i + i1)
         }).collect()
     }
 

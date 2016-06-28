@@ -67,18 +67,28 @@ impl Patterns {
             false => Cow::Borrowed(word)
         };
         let cs = once('.').chain(w.chars()).chain(once('.'));
-        let length = cs.clone().count();
-        let mut points: Vec<u32> = vec![0; length + 1];
+        let match_length = cs.clone().count();
 
-        for i in 0..length {
+        if match_length <= 3 {
+            return vec![];
+        }
+
+        let hyphenable_length = match_length - 2;
+        let mut points: Vec<u8> = vec![0; hyphenable_length - 1];
+
+        for i in 0..match_length {
             let mut m = &self.descendants;
             for c in cs.clone().skip(i) {
                 match m.get(&c) {
-                    Some(&Patterns { tally: Some(ref t), descendants: ref m1 }) =>
+                    Some(&Patterns { tally: Some(ref t), descendants: ref m1 }) => {
+                        m = m1;
                         for (j, &p) in t.iter().enumerate() {
-                            let p1 = points[i + j];
-                            m = m1;
-                            points[i + j] = max(p, p1)
+                            let k = i + j;
+                            if k > 1 && k <= hyphenable_length {
+                                let p1 = points[k - 2];
+                                points[k - 2] = max(p, p1)
+                            }
+                        }
                     },
                     Some(patterns) => m = &patterns.descendants,
                     _ => break
@@ -86,8 +96,6 @@ impl Patterns {
             }
         }
 
-        points.truncate(length - 1);
-        points.remove(0);
         points
     }
 }
