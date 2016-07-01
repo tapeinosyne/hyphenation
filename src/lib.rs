@@ -20,8 +20,17 @@
 //! let english_us = hyphenation::load(Language::English_US).unwrap();
 //! ```
 //!
-//! Our English `Corpus` can now be used by *hyphenators*: iterators which
-//! segment text in accordance with hyphenation practices, as described
+//! Our English `Corpus` can now be used by `Hyphenation` methods.
+//! Core functionality is provided by `opportunities()`, which returns the
+//! byte indices of valid hyphenation points within a word.
+//!
+//! ```ignore
+//! let indices = "hyphenation".opportunities(&english_us);
+//! assert_eq!(indices, vec![2, 6]);
+//! ```
+//!
+//! The same `Corpus` may also be used by *hyphenators*: iterators which
+//! segment words in accordance with hyphenation practices, as described
 //! by the corpus.
 //!
 //! The simplest (and, presently, only) hyphenator is `Standard`:
@@ -38,17 +47,19 @@
 //! assert_eq!(v, vec!["hy", "phen", "ation"]);
 //! ```
 //!
-//! While hyphenation is performed on a per-word basis, convenience calls
-//! for `Hyphenation` to work with full text by default.
+//! While hyphenation is always performed on a per-word basis, convenience
+//! calls for a subtrait to provide methods to work with full text.
 //!
 //! ```ignore
-//! let h2: Standard = "Word hyphenation by computer.".hyphenate(&english_us);
+//! use hyphenation::{FullTextHyphenation};
+//!
+//! let h2: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&english_us);
 //! let v2: Vec<&str> = h2.collect();
 //! assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
 //! ```
 //!
-//! Moreover, hyphenators expose some simple methods to render hyphenated
-//! text: `punctuate()` and `punctuate_with(string)`, which mark hyphenation
+//! Hyphenators also expose some simple methods to render hyphenated text:
+//! `punctuate()` and `punctuate_with(string)`, which mark hyphenation
 //! opportunities respectively with soft hyphens (Unicode `U+00AD SOFT HYPHEN`)
 //! and any given `string`.
 //!
@@ -59,16 +70,6 @@
 //!
 //! let s4: String = h2.punctuate_with("-").collect()
 //! assert_eq!(s4, "an-frac-tu-ous".to_owned());
-//! ```
-//!
-//! If we would rather manipulate our text in other ways, we may employ
-//! `opportunities()`, which returns the byte indices of hyphenation opportunities
-//! within the string. (Internally, `opportunities()` is the fundamental method
-//! required by `Hyphenation`; other functionality is implemented on top of it.)
-//!
-//! ```ignore
-//! let indices = "hyphenation".opportunities(&english_us);
-//! assert_eq!(indices, vec![2, 6]);
 //! ```
 
 extern crate fnv;

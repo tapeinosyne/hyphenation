@@ -37,7 +37,7 @@ impl Patterns {
 
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     ///
-    /// If the pattern already existed, the old tally is returned; if not, `None` is.
+    /// If the pattern already exists, the old tally is returned; if not, `None` is.
     pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>>{
         let (p, tally) = klpair;
 

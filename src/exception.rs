@@ -18,7 +18,7 @@ impl Exceptions {
 
     /// Inserts a Knuth-Liang exception pair into the map.
     ///
-    /// If the pattern already existed, the old score is returned; if not, `None` is.
+    /// If the pattern already exists, the old score is returned; if not, `None` is.
     pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>> {
         let (p, score) = klpair;
         let Exceptions(ref mut m) = *self;

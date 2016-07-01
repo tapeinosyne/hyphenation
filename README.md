@@ -18,6 +18,10 @@ use hyphenation::Language::{English_US};
 // Load hyphenation data for American English from the pattern repository.
 let english_us = hyphenation::load(English_US).unwrap();
 
+// The byte indices of valid hyphenation points within a word.
+let indices = "hyphenation".opportunities(&english_us);
+assert_eq!(indices, vec![2, 6]);
+
 // An iterator that breaks a word according to standard hyphenation practices.
 let h: Standard = "hyphenation".hyphenate(&english_us);
                 // hy-phen-ation
@@ -26,10 +30,17 @@ let h: Standard = "hyphenation".hyphenate(&english_us);
 let v: Vec<&str> = h.collect();
 assert_eq!(v, vec!["hy", "phen", "ation"]);
 
-// Hyphenators work with full text as well as individual words.
-let h2: Standard = "Word hyphenation by computer.".hyphenate(&english_us);
+
+// Hyphenation works with full text as well as individual words.
+use hyphenation::FullTextHyphenation;
+
+let text_indices = "Word hyphenation by computer.".fulltext_opportunities(&english_us);
+assert_eq!(text_indices, vec![7, 11, 23]);
+
+let h2: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&english_us);
 let v2: Vec<&str> = h2.collect();
 assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
+
 
 // Mark hyphenation opportunities with soft hyphens,
 // and render the result to a new String.
