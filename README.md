@@ -46,6 +46,7 @@ This form is ubiquitous, and you probably need not worry about it. Nevertheless,
 
 - Assamese
 - Bengali
+- Church Slavonic
 - Greek (Ancient, Monotonic, Polytonic)
 - Punjabi
 - Sanskrit

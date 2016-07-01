@@ -86,6 +86,7 @@ pub enum Language {
     Serbian_Cyrillic,
     Serbocroatian_Cyrillic,
     Serbocroatian_Latin,
+    Slavonic_Church,
     Slovak,
     Slovenian,
     Spanish,
@@ -165,6 +166,7 @@ pub fn tag(lang: Language) -> &'static str {
         Serbian_Cyrillic => "sr-cyrl",
         Serbocroatian_Cyrillic => "sh-cyrl",
         Serbocroatian_Latin => "sh-latn",
+        Slavonic_Church => "cu",
         Slovak => "sk",
         Slovenian => "sl",
         Spanish => "es",
@@ -245,6 +247,7 @@ pub fn mins(lang: Language) -> (usize, usize) {
         Serbian_Cyrillic => (2, 2),
         Serbocroatian_Cyrillic => (2, 2),
         Serbocroatian_Latin => (2, 2),
+        Slavonic_Church => (1, 2),  // NOTE: potential complications, refer to TeX package
         Slovak => (2, 3),
         Slovenian => (2, 2),
         Spanish => (2, 2),
