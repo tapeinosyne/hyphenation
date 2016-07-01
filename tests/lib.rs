@@ -8,7 +8,7 @@ use std::path::{Path};
 use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
-use hyphenation::{load, Language, Corpus, Hyphenation, Standard};
+use hyphenation::{load, Language, Corpus, Hyphenation, FullTextHyphenation, Standard};
 
 
 fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }
@@ -86,7 +86,7 @@ fn basics() {
     let h1: Standard = "hyphenation".hyphenate(&EN_US);
     let h2: Standard = "project".hyphenate(&EN_US);
     let h3: Standard = "hypha".hyphenate(&EN_US);
-    let h4: Standard = "Word hyphenation by computer.".hyphenate(&EN_US);
+    let h4: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&EN_US);
 
     let v1: Vec<&str> = h1.clone().collect();
     let v2: Vec<&str> = h2.clone().collect();

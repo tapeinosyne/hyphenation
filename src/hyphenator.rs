@@ -8,16 +8,25 @@ use language::{Corpus};
 use utilia::{Interspersable, Intersperse};
 
 pub trait Hyphenation<Hyphenator> where Hyphenator : Iterator {
-    /// Returns the indices of valid hyphenation points within the text.
+    /// Returns the indices of valid hyphenation points within the given word.
     fn opportunities(self, corp: &Corpus) -> Vec<usize>;
 
-    /// Returns an iterator over segments of the text separated by valid
-    /// hyphenation points.
+    /// Returns an iterator over orthographic syllables of the given word,
+    /// separated by valid hyphenation points.
     ///
-    /// When iterating over a word, such segments coincide with orthographic
-    /// syllables. Note that, in some orthographies, the syllables of a hyphenated
+    /// Note that, in some orthographies, the syllables of a hyphenated
     /// word are not necessarily substrings of the original word.
     fn hyphenate(self, corp: &Corpus) -> Hyphenator;
+}
+
+pub trait FullTextHyphenation<Hyphenator> : Hyphenation<Hyphenator>
+    where Hyphenator : Iterator {
+    /// Returns the indices of valid hyphenation points within the given text.
+    fn fulltext_opportunities(self, corp: &Corpus) -> Vec<usize>;
+
+    /// Returns an iterator over segments of the given text, separated by
+    /// valid hyphenation points.
+    fn fulltext_hyphenate(self, corp: &Corpus) -> Hyphenator;
 }
 
 
@@ -82,13 +91,48 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
             return vec![];
         }
 
+        let pts = match corp.exceptions.iter()
+                            .filter_map(|exs| exs.score(self))
+                            .next() {
+                                Some(vec) => Cow::Borrowed(vec),
+                                None => Cow::Owned(corp.patterns.score(self))
+        };
+
+        self.char_indices().skip(l_min)
+            .zip(&pts[l_min - 1 .. pts.len() - r_min + 1])
+            .filter(|&(_, p)| p % 2 != 0)
+            .map(|((i, _), _)| i)
+            .collect()
+    }
+
+    /// Returns an iterator over string slices separated by valid hyphenation
+    /// points.
+    fn hyphenate(self, corp: &Corpus) -> Standard<'a> {
+        Standard {
+            text: self,
+            opportunities: self.opportunities(corp),
+            prior: 0,
+            i: 0
+        }
+    }
+}
+
+impl<'a> FullTextHyphenation<Standard<'a>> for &'a str {
+    fn fulltext_opportunities(self, corp: &Corpus) -> Vec<usize> {
+        let (l_min, r_min) = (corp.left_min, corp.right_min);
+        let length_min = l_min + r_min;
+
+        if self.chars().count() < length_min {
+            return vec![];
+        }
+
         let by_word = self.split_word_bound_indices();
         by_word.flat_map(|(i, word)| {
             let pts = match corp.exceptions.iter()
-                                    .filter_map(|exs| exs.score(word))
-                                    .next() {
-                        Some(vec) => Cow::Borrowed(vec),
-                        None => Cow::Owned(corp.patterns.score(word))
+                                .filter_map(|exs| exs.score(word))
+                                .next() {
+                                    Some(vec) => Cow::Borrowed(vec),
+                                    None => Cow::Owned(corp.patterns.score(word))
             }.into_owned();
 
             let hyph_length = pts.len();
@@ -102,14 +146,13 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
         }).collect()
     }
 
-    /// Returns an iterator over string slices separated by valid hyphenation
-    /// points.
-    fn hyphenate(self, corp: &Corpus) -> Standard<'a> {
+    fn fulltext_hyphenate(self, corp: &Corpus) -> Standard<'a> {
         Standard {
             text: self,
-            opportunities: self.opportunities(corp),
+            opportunities: self.fulltext_opportunities(corp),
             prior: 0,
             i: 0
         }
+
     }
 }

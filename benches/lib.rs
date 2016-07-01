@@ -13,7 +13,7 @@ use test::Bencher;
 use serde_json::{self as json};
 
 extern crate hyphenation;
-use hyphenation::{load, Corpus, Hyphenation, Language};
+use hyphenation::{load, Corpus, Hyphenation, FullTextHyphenation, Language};
 use hyphenation::exception::{Exceptions};
 use hyphenation::pattern::{Patterns};
 
@@ -80,6 +80,28 @@ fn hyphenate_en_us(b: &mut Bencher) {
     b.iter(|| {
         for w in ws.by_ref() {
             w.hyphenate(&EN_US).count();
+        }
+    })
+}
+
+#[bench]
+fn fulltext_opportunities_en_us(b: &mut Bencher) {
+    let mut ws = WORDS.iter();
+
+    b.iter(|| {
+        for w in ws.by_ref() {
+            w.fulltext_opportunities(&EN_US);
+        }
+    })
+}
+
+#[bench]
+fn fulltext_hyphenate_en_us(b: &mut Bencher) {
+    let mut ws = WORDS.iter();
+
+    b.iter(|| {
+        for w in ws.by_ref() {
+            w.fulltext_hyphenate(&EN_US).count();
         }
     })
 }

@@ -83,6 +83,6 @@ pub mod language;
 pub mod load;
 pub mod pattern;
 
-pub use hyphenator::{Hyphenation, Standard};
+pub use hyphenator::{Hyphenation, FullTextHyphenation, Standard};
 pub use language::{Language, Corpus};
 pub use load::{language as load};
