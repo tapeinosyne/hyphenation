@@ -1,3 +1,7 @@
+## 0.5.0
+- Reverted from previous change in 0.3.0: the `Hyphenation` trait only performs word hyphenation. Full text hyphenation is now part of the `FullTextHyphenation` trait.
+- Language support: added Church Slavonic.
+
 ## 0.4.1
 - Updated patterns to [hyph-utf8.json](https://github.com/ndr-qef/hyph-utf8.json) v0.1.0.0.
 
