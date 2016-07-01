@@ -3,7 +3,7 @@ extern crate lazy_static;
 extern crate quickcheck;
 
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 use std::path::{Path};
 use quickcheck::{quickcheck, TestResult};
 
