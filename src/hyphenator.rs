@@ -39,7 +39,7 @@ pub struct Standard<'a> {
     text: &'a str,
     opportunities: Vec<usize>,
     prior: usize,
-    i: usize
+    current: usize
 }
 
 impl<'a> Standard<'a> {
@@ -60,17 +60,17 @@ impl<'a> Iterator for Standard<'a> {
 
     fn next(&mut self) -> Option<&'a str> {
         let start = self.prior;
-        let i = self.i;
+        let current = self.current;
 
-        match self.opportunities.get(i) {
+        match self.opportunities.get(current) {
             Some(&end) => {
                 self.prior = end;
-                self.i = i + 1;
+                self.current = current + 1;
                 Some(&self.text[start .. end])
             },
             None => {
-                if i <= self.opportunities.len() {
-                    self.i = i + 1;
+                if current <= self.opportunities.len() {
+                    self.current = current + 1;
                     Some(&self.text[start ..])
                 } else {
                     None
@@ -112,7 +112,7 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
             text: self,
             opportunities: self.opportunities(corp),
             prior: 0,
-            i: 0
+            current: 0
         }
     }
 }
@@ -136,11 +136,12 @@ impl<'a> FullTextHyphenation<Standard<'a>> for &'a str {
             }.into_owned();
 
             let hyph_length = pts.len();
-            let l = l_min;
-            let r = if hyph_length >= length_min - 1 { hyph_length + 2 - length_min } else { 0 };
+            let remaining = if hyph_length >= length_min - 1 {
+                hyph_length + 2 - length_min
+            } else { 0 };
 
-            word.char_indices().skip(l)
-                .zip(pts.into_iter().skip(l - 1).take(r))
+            word.char_indices().skip(l_min)
+                .zip(pts.into_iter().skip(l_min - 1).take(remaining))
                 .filter(|&(_, p)| p % 2 != 0)
                 .map(move |((i1, _), _)| i + i1)
         }).collect()
@@ -151,7 +152,7 @@ impl<'a> FullTextHyphenation<Standard<'a>> for &'a str {
             text: self,
             opportunities: self.fulltext_opportunities(corp),
             prior: 0,
-            i: 0
+            current: 0
         }
 
     }
