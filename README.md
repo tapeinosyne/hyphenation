@@ -6,7 +6,9 @@ Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ct
 hyphenation = "0.5.0"
 ```
 
-[Documentation](https://ndr-qef.github.io/hyphenation)
+
+## Documentation
+[Docs.rs](https://docs.rs/hyphenation)
 
 
 ## Quickstart

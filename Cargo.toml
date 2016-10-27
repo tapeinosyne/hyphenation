@@ -6,7 +6,7 @@ authors = ["ndr <ndr@qef.io>"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/ndr-qef/hyphenation"
 homepage = "https://github.com/ndr-qef/hyphenation"
-documentation = "https://ndr-qef.github.io/hyphenation"
+documentation = "https://docs.rs/hyphenation"
 
 readme = "README.md"
 description = "Standard Knuth-Liang hyphenation based on the TeX UTF-8 patterns."
