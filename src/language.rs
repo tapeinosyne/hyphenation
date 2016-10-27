@@ -185,6 +185,12 @@ pub fn tag(lang: Language) -> &'static str {
 /// The default number of characters from the start and end of a word
 /// which shall not be hyphenated.
 pub fn mins(lang: Language) -> (usize, usize) {
+    // NOTE: These values were taken directly from the relevant TeX packages, but
+    // it is unclear how well they map to the notion of Unicode `char` in Rust.
+    //
+    // In the worst case, a language featuring graphemes larger than 1 `char` may
+    // set boundaries mid-grapheme. This should be of no practical consequence,
+    // since well-formed hyphenation patterns only match full graphemes.
     match lang {
         Afrikaans => (1, 2),
         Armenian => (1, 2),
