@@ -118,3 +118,11 @@ fn basics() {
     h3.next();
     assert_eq!(h3.size_hint(), (0, Some(0)));
 }
+
+#[test]
+#[should_panic(expected = "assertion failed")]
+fn known_inaccuracies() {
+    let example1: Vec<&str> = "chionididae".hyphenate(&EN_US).collect();
+
+    assert!(example1 == vec!["chi", "o", "nid", "i", "dae"]);
+}
