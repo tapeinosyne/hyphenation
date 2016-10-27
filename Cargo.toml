@@ -21,12 +21,12 @@ build = "build.rs"
 
 [dependencies]
 fnv = "^1.0"
-serde_json = "^0.7"
+serde_json = "^0.8"
 unicode-segmentation = "^0.1"
 
 [build-dependencies]
 pocket-resources = "^0.3"
 
 [dev-dependencies]
-lazy_static = "^0.1"
-quickcheck = "^0.2"
+lazy_static = "^0.2"
+quickcheck = "^0.3"
