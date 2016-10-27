@@ -78,6 +78,11 @@ impl<'a> Iterator for Standard<'a> {
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.opportunities.len() + 1 - self.current;
+        (remaining, Some(remaining))
+    }
 }
 
 

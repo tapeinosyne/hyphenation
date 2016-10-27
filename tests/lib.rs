@@ -88,6 +88,11 @@ fn basics() {
     let h3: Standard = "hypha".hyphenate(&EN_US);
     let h4: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&EN_US);
 
+    assert_eq!(h1.size_hint(), (3, Some(3)));
+    assert_eq!(h2.size_hint(), (1, Some(1)));
+    assert_eq!(h3.size_hint(), (2, Some(2)));
+    assert_eq!(h4.size_hint(), (4, Some(4)));
+
     let v1: Vec<&str> = h1.clone().collect();
     let v2: Vec<&str> = h2.clone().collect();
     let v3: Vec<&str> = h3.clone().collect();
@@ -99,4 +104,17 @@ fn basics() {
 
     let s1: String = h1.punctuate().collect();
     assert_eq!(s1, "hy\u{ad}phen\u{ad}ation".to_owned());
+
+    // And some further size_hint sanity checking for partially consumed iterators.
+    let mut h2 = h2;
+    h2.next();
+    assert_eq!(h2.size_hint(), (0, Some(0)));
+    h2.next();
+    assert_eq!(h2.size_hint(), (0, Some(0)));
+
+    let mut h3 = h3;
+    h3.next();
+    assert_eq!(h3.size_hint(), (1, Some(1)));
+    h3.next();
+    assert_eq!(h3.size_hint(), (0, Some(0)));
 }
