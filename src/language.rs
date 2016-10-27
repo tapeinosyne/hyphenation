@@ -247,7 +247,7 @@ pub fn mins(lang: Language) -> (usize, usize) {
         Serbian_Cyrillic => (2, 2),
         Serbocroatian_Cyrillic => (2, 2),
         Serbocroatian_Latin => (2, 2),
-        Slavonic_Church => (1, 2),  // NOTE: potential complications, refer to TeX package
+        Slavonic_Church => (1, 2),
         Slovak => (2, 3),
         Slovenian => (2, 2),
         Spanish => (2, 2),
