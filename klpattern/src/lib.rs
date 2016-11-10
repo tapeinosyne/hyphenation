@@ -27,7 +27,7 @@ pub struct Patterns {
 
 impl Patterns {
     /// Creates an empty `Patterns` trie.
-    pub fn empty() -> Patterns {
+    pub fn new() -> Patterns {
         let fnv = BuildHasherDefault::<FnvHasher>::default();
 
         Patterns {
@@ -42,7 +42,7 @@ impl Patterns {
     pub fn insert(&mut self, (p, tally): KLPair) -> Option<Vec<u8>> {
         let node = p.chars().fold(self, |t, c| {
             match t.descendants.entry(c) {
-                Entry::Vacant(e) => e.insert(Patterns::empty()),
+                Entry::Vacant(e) => e.insert(Patterns::new()),
                 Entry::Occupied(e) => e.into_mut()
             }
         });
@@ -106,7 +106,7 @@ pub struct Exceptions(pub HashMap<String, Vec<u8>>);
 
 impl Exceptions {
     /// Creates an empty `Exceptions` map.
-    pub fn empty() -> Exceptions {
+    pub fn new() -> Exceptions {
         Exceptions(HashMap::new())
     }
 

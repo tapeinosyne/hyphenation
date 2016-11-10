@@ -42,12 +42,12 @@ pub fn language(lang: Language) -> Result<Corpus, Error> {
     let pat_pairs = try!(patterns(lang));
     let ex_pairs = try!(exceptions(lang));
 
-    let mut ps = Patterns::empty();
+    let mut ps = Patterns::new();
     for p in pat_pairs {
         ps.insert(p);
     }
 
-    let mut exs = Exceptions::empty();
+    let mut exs = Exceptions::new();
     for ex in ex_pairs {
         exs.insert(ex);
     }
