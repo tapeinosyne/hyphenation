@@ -1,6 +1,13 @@
 //! Data structures and methods for parsing and applying Knuth-Liang
 //! hyphenation patterns and exceptions.
 
+#![cfg_attr(feature = "serde_derive", feature(proc_macro))]
+
+#[cfg(feature = "serde_derive")]
+#[macro_use]
+extern crate serde_derive;
+
+extern crate serde;
 extern crate fnv;
 
 use std::borrow::Cow;
@@ -18,12 +25,12 @@ use fnv::FnvHasher;
 pub type KLPair = (String, Vec<u8>);
 
 
-/// A basic trie, used to associate patterns to their hyphenation scores.
-#[derive(Clone, Debug)]
-pub struct Patterns {
-    pub tally: Option<Vec<u8>>,
-    pub descendants: HashMap<char, Patterns, BuildHasherDefault<FnvHasher>>
-}
+#[cfg(feature = "serde_derive")]
+include!("serde_types.in.rs");
+
+#[cfg(feature = "serde_codegen")]
+include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
+
 
 impl Patterns {
     /// Creates an empty `Patterns` trie.
@@ -99,10 +106,6 @@ impl Patterns {
     }
 }
 
-
-/// A specialized hash map of pattern-score pairs.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Exceptions(pub HashMap<String, Vec<u8>>);
 
 impl Exceptions {
     /// Creates an empty `Exceptions` map.

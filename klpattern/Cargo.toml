@@ -2,10 +2,20 @@
 publish = false
 
 name = "klpattern"
+version = "0.6.0" # version-locked to main `hyphenation` crate
+
 authors = ["ndr <ndr@qef.io>"]
 
-## Version-locked to main `hyphenation` crate
-version = "0.6.0"
+build = "build.rs"
+
+[features]
+default = ["serde_codegen"]
+unstable = ["serde_derive"]
 
 [dependencies]
 fnv = "^1.0"
+serde = "0.8"
+serde_derive = { version = "0.8", optional = true }
+
+[build-dependencies]
+serde_codegen = { version = "0.8", optional = true }
