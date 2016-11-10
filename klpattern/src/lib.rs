@@ -104,6 +104,10 @@ impl Patterns {
 
         points
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.descendants.is_empty()
+    }
 }
 
 
@@ -129,5 +133,10 @@ impl Exceptions {
         let w = word.to_lowercase();
 
         m.get(&w)
+    }
+
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }

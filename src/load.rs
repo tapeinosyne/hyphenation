@@ -55,7 +55,7 @@ pub fn language(lang: Language) -> Result<Corpus, Error> {
     Ok(Corpus {
         language: lang,
         patterns: ps,
-        exceptions: if !exs.0.is_empty() { Some(exs) } else { None },
+        exceptions: if !exs.is_empty() { Some(exs) } else { None },
         left_min: l,
         right_min: r
     })
