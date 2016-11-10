@@ -85,6 +85,8 @@ impl<'a> Iterator for Standard<'a> {
     }
 }
 
+impl<'a> ExactSizeIterator for Standard<'a> {}
+
 
 impl<'a> Hyphenation<Standard<'a>> for &'a str {
     /// Returns the byte indices of valid hyphenation points within the string.
