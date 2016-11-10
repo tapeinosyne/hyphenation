@@ -47,6 +47,7 @@
 //! assert_eq!(v, vec!["hy", "phen", "ation"]);
 //! ```
 //!
+//! ## Full-text Hyphenation
 //! While hyphenation is always performed on a per-word basis, convenience
 //! calls for a subtrait to provide methods to work with full text.
 //!
@@ -73,17 +74,17 @@
 //! ```
 
 extern crate fnv;
+extern crate klpattern;
 extern crate serde_json;
 extern crate unicode_segmentation;
 
 mod resources;
 mod utilia;
-pub mod exception;
 pub mod hyphenator;
 pub mod language;
 pub mod load;
-pub mod pattern;
 
+pub use klpattern::{Exceptions, Patterns};
 pub use hyphenator::{Hyphenation, FullTextHyphenation, Standard};
 pub use language::{Language, Corpus};
 pub use load::{language as load};

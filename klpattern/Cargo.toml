@@ -1,0 +1,11 @@
+[package]
+publish = false
+
+name = "klpattern"
+authors = ["ndr <ndr@qef.io>"]
+
+## Version-locked to main `hyphenation` crate
+version = "0.6.0"
+
+[dependencies]
+fnv = "^1.0"

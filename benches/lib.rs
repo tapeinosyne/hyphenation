@@ -13,9 +13,7 @@ use test::Bencher;
 use serde_json::{self as json};
 
 extern crate hyphenation;
-use hyphenation::{load, Corpus, Hyphenation, FullTextHyphenation, Language};
-use hyphenation::exception::{Exceptions};
-use hyphenation::pattern::{Patterns};
+use hyphenation::{load, Corpus, Exceptions, Patterns, Hyphenation, FullTextHyphenation, Language};
 
 
 fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }

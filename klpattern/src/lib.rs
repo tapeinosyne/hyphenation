@@ -1,5 +1,7 @@
 //! Data structures and methods for parsing and applying Knuth-Liang
-//! hyphenation patterns.
+//! hyphenation patterns and exceptions.
+
+extern crate fnv;
 
 use std::borrow::Cow;
 use std::cmp::{max};
@@ -9,7 +11,6 @@ use std::iter::{once};
 use std::mem;
 
 use fnv::FnvHasher;
-
 
 /// A pair representing a Knuth-Liang hyphenation pattern. It comprises
 /// alphabetical characters for subword matching and the score of each
@@ -38,9 +39,7 @@ impl Patterns {
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     ///
     /// If the pattern already exists, the old tally is returned; if not, `None` is.
-    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>>{
-        let (p, tally) = klpair;
-
+    pub fn insert(&mut self, (p, tally): KLPair) -> Option<Vec<u8>> {
         let node = p.chars().fold(self, |t, c| {
             match t.descendants.entry(c) {
                 Entry::Vacant(e) => e.insert(Patterns::empty()),
@@ -97,5 +96,35 @@ impl Patterns {
         }
 
         points
+    }
+}
+
+
+/// A specialized hash map of pattern-score pairs.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Exceptions(pub HashMap<String, Vec<u8>>);
+
+impl Exceptions {
+    /// Creates an empty `Exceptions` map.
+    pub fn empty() -> Exceptions {
+        Exceptions(HashMap::new())
+    }
+
+    /// Inserts a Knuth-Liang exception pair into the map.
+    ///
+    /// If the pattern already exists, the old score is returned; if not, `None` is.
+    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>> {
+        let (p, score) = klpair;
+        let Exceptions(ref mut m) = *self;
+
+        m.insert(p, score)
+    }
+
+    /// Retrieves the score for each hyphenation point of `word`.
+    pub fn score(&self, word: &str) -> Option<&Vec<u8>> {
+        let Exceptions(ref m) = *self;
+        let w = word.to_lowercase();
+
+        m.get(&w)
     }
 }

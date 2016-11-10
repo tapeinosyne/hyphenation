@@ -22,6 +22,7 @@ build = "build.rs"
 [dependencies]
 fnv = "^1.0"
 serde_json = "^0.8"
+klpattern = { path = "klpattern", version = "0.6.0" }
 unicode-segmentation = "^0.1"
 
 [build-dependencies]
