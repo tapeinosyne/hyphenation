@@ -32,9 +32,25 @@ include!("serde_types.in.rs");
 include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 
 
-impl Patterns {
+pub trait KLPTrie<'a> {
+    type Score;
+
+    fn new() -> Self;
+
+    fn insert(&mut self, KLPair) -> Option<Vec<u8>>;
+
+    fn score(&'a self, &str) -> Self::Score;
+
+    fn is_empty(&self) -> bool;
+
+}
+
+
+impl<'a> KLPTrie<'a> for Patterns {
+    type Score = Vec<u8>;
+
     /// Creates an empty `Patterns` trie.
-    pub fn new() -> Patterns {
+    fn new() -> Patterns {
         let fnv = BuildHasherDefault::<FnvHasher>::default();
 
         Patterns {
@@ -46,7 +62,7 @@ impl Patterns {
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     ///
     /// If the pattern already exists, the old tally is returned; if not, `None` is.
-    pub fn insert(&mut self, (p, tally): KLPair) -> Option<Vec<u8>> {
+    fn insert(&mut self, (p, tally): KLPair) -> Option<Vec<u8>> {
         let node = p.chars().fold(self, |t, c| {
             match t.descendants.entry(c) {
                 Entry::Vacant(e) => e.insert(Patterns::new()),
@@ -67,7 +83,7 @@ impl Patterns {
     ///
     /// All patterns matching a substring of `word` are compounded, and for
     /// each hyphenation point, the highest competing value is selected.
-    pub fn score(&self, word: &str) -> Vec<u8> {
+    fn score(&self, word: &str) -> Self::Score {
         let w = match word.chars().any(|c| c.is_uppercase()) {
             true => Cow::Owned(word.to_lowercase()),
             false => Cow::Borrowed(word)
@@ -105,22 +121,24 @@ impl Patterns {
         points
     }
 
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.descendants.is_empty()
     }
 }
 
 
-impl Exceptions {
+impl<'a> KLPTrie<'a> for Exceptions {
+    type Score = Option<&'a Vec<u8>>;
+
     /// Creates an empty `Exceptions` map.
-    pub fn new() -> Exceptions {
+    fn new() -> Exceptions {
         Exceptions(HashMap::new())
     }
 
     /// Inserts a Knuth-Liang exception pair into the map.
     ///
     /// If the pattern already exists, the old score is returned; if not, `None` is.
-    pub fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>> {
+    fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>> {
         let (p, score) = klpair;
         let Exceptions(ref mut m) = *self;
 
@@ -128,15 +146,14 @@ impl Exceptions {
     }
 
     /// Retrieves the score for each hyphenation point of `word`.
-    pub fn score(&self, word: &str) -> Option<&Vec<u8>> {
+    fn score(&'a self, word: &str) -> Self::Score {
         let Exceptions(ref m) = *self;
         let w = word.to_lowercase();
 
         m.get(&w)
     }
 
-
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }

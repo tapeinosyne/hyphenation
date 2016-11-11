@@ -8,7 +8,7 @@ use std::path::{Path};
 use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
-use hyphenation::{load, Language, Corpus, Hyphenation, FullTextHyphenation, Standard};
+use hyphenation::*;
 
 
 fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }

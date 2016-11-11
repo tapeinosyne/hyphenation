@@ -84,7 +84,7 @@ pub mod hyphenator;
 pub mod language;
 pub mod load;
 
-pub use klpattern::{Exceptions, Patterns};
+pub use klpattern::{KLPair, KLPTrie, Exceptions, Patterns};
 pub use hyphenator::{Hyphenation, FullTextHyphenation, Standard};
 pub use language::{Language, Corpus};
 pub use load::{language as load};

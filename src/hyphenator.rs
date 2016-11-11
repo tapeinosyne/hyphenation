@@ -4,6 +4,7 @@ use std::borrow::Cow;
 
 use unicode_segmentation::UnicodeSegmentation;
 
+use klpattern::KLPTrie;
 use language::{Corpus};
 use utilia::{Interspersable, Intersperse};
 
