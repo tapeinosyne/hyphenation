@@ -17,6 +17,24 @@ include = ["**/*.rs", "**/Cargo.toml", "patterns-tex", "**/*.md", "LICENSE*"]
 build = "build.rs"
 
 
+[features]
+
+# Normalization forms.
+#
+# HEED: these features are mutually exclusive; only one may be passed to rustc/cargo as an argument. This restriction may be lifted in the future, should `hyphenation` benefit from operating on multiple forms at runtime.
+#
+# `build.rs` ensures – in rather haphazard fashion – that these multiple "features" effectively behave as a single parameter, i.e. as a closed set. Were the user to select more than one normalization form, the build will fail – alas, with an uninformative error message.
+
+nfc = []
+nfd = []
+nfkc = []
+nfkd = []
+none = []
+
+# The default is manually implemented by `build.rs`, since other features cannot disable it.
+# default = ["nfc"]
+
+
 [dependencies]
 klpattern = { path = "klpattern", version = "0.6.0" }
 bincode = "^0.6"

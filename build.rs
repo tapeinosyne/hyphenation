@@ -16,9 +16,50 @@ use std::path::Path;
 use serde::ser;
 use bincode::SizeLimit;
 use bincode::serde as bin;
-use unicode_normalization::UnicodeNormalization;
 
 use klpattern::{KLPair, KLPTrie, Exceptions, Patterns};
+
+
+// User configuration
+
+use configurable::*;
+
+mod configurable {
+    use unicode_normalization::*;
+    use std::str::Chars;
+
+    // In service of configurable normalization forms, a type alias and a function
+    // are defined via conditional compilation.
+    //
+    // If no feature is explicitly set, we default to the declarations for NFC.
+    
+    // Neither Cargo nor rustc allows us to set exclusive features; we must indulge
+    // them with this clumsy branle of cfg declarations.
+
+    #[cfg(any(any(feature = "nfc", feature = "nfkc"),
+              not(any(feature = "nfc", feature = "nfd",
+                      feature = "nfkc", feature = "nfkd",
+                      feature = "none"))))]
+    pub type Normalizer<'a> = Recompositions<Chars<'a>>;
+
+    #[cfg(any(feature = "nfd", feature = "nfkd"))]
+    pub type Normalizer<'a> = Decompositions<Chars<'a>>;
+
+    #[cfg(feature = "none")]
+    pub type Normalizer<'a> = Chars<'a>;
+
+
+    #[cfg(any(feature = "nfc",
+              not(any(feature = "nfc", feature = "nfd",
+                      feature = "nfkc", feature = "nfkd",
+                      feature = "none"))))]
+    pub fn normalize<'a>(s: &'a str) -> Normalizer<'a> { s.nfc() }
+
+    #[cfg(feature = "nfd")]  pub fn normalize<'a>(s: &'a str) -> Normalizer<'a> { s.nfd() }
+    #[cfg(feature = "nfkc")] pub fn normalize<'a>(s: &'a str) -> Normalizer<'a> { s.nfkc() }
+    #[cfg(feature = "nfkd")] pub fn normalize<'a>(s: &'a str) -> Normalizer<'a> { s.nfkd() }
+    #[cfg(feature = "none")] pub fn normalize<'a>(s: &'a str) -> Normalizer<'a> { s.chars() }
+}
 
 
 // Pattern parsing
@@ -54,7 +95,7 @@ trait KLPattern {
 
     fn klpair(&self) -> KLPair {
         let str_klp = &self.unklp();
-        let normalized: String = str_klp.nfc().collect();
+        let normalized: String = normalize(str_klp).collect();
         let as_chars = normalized.chars();
 
         let alphabetical: String = as_chars.clone().filter(Self::non_scoring).collect();
