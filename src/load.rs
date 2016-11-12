@@ -5,15 +5,15 @@ use std::error;
 use std::fmt;
 use std::io;
 
-use serde_json::{self as json};
+use bincode::serde as bin;
 
-use klpattern::{KLPair, KLPTrie, Exceptions, Patterns};
+use klpattern::{KLPTrie, Exceptions, Patterns};
 use language::{Corpus, Language, mins, tag};
 use resources::ResourceId;
 
 
 pub fn data_file(lang: Language, suffix: &str) -> Result<&[u8], Error> {
-    let fname = format!("hyph-{}.{}.json", tag(lang), suffix);
+    let fname = format!("{}.{}.bincode", tag(lang), suffix);
     let res: Option<ResourceId> = ResourceId::from_name(&fname);
 
     match res {
@@ -22,35 +22,25 @@ pub fn data_file(lang: Language, suffix: &str) -> Result<&[u8], Error> {
     }
 }
 
-pub fn patterns(lang: Language) -> Result<Vec<KLPair>, Error> {
-    let f = try!(data_file(lang, "pat"));
-    let pairs: Vec<(String, Vec<u8>)> = try!(json::from_slice(f));
+pub fn patterns(lang: Language) -> Result<Patterns, Error> {
+    let f = try!(data_file(lang, "patterns"));
+    let trie: Patterns = try!(bin::deserialize(f));
 
-    Ok(pairs)
+    Ok(trie)
 }
 
-pub fn exceptions(lang: Language) -> Result<Vec<KLPair>, Error> {
-    let f = try!(data_file(lang, "hyp"));
-    let pairs: Vec<(String, Vec<u8>)> = try!(json::from_slice(f));
+pub fn exceptions(lang: Language) -> Result<Exceptions, Error> {
+    let f = try!(data_file(lang, "exceptions"));
+    let trie: Exceptions = try!(bin::deserialize(f));
 
-    Ok(pairs)
+    Ok(trie)
 }
 
 /// Constructs the default `Corpus` for a given language.
 pub fn language(lang: Language) -> Result<Corpus, Error> {
     let (l, r) = mins(lang);
-    let pat_pairs = try!(patterns(lang));
-    let ex_pairs = try!(exceptions(lang));
-
-    let mut ps = Patterns::new();
-    for p in pat_pairs {
-        ps.insert(p);
-    }
-
-    let mut exs = Exceptions::new();
-    for ex in ex_pairs {
-        exs.insert(ex);
-    }
+    let ps = try!(patterns(lang));
+    let exs = try!(exceptions(lang));
 
     Ok(Corpus {
         language: lang,
@@ -66,7 +56,7 @@ pub fn language(lang: Language) -> Result<Corpus, Error> {
 #[derive(Debug)]
 pub enum Error {
     IO(io::Error),
-    Deserialization(json::Error),
+    Deserialization(bin::DeserializeError),
     Resource
 }
 
@@ -99,8 +89,8 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<json::Error> for Error {
-    fn from(err: json::Error) -> Error {
+impl From<bin::DeserializeError> for Error {
+    fn from(err: bin::DeserializeError) -> Error {
         Error::Deserialization(err)
     }
 }

@@ -2,18 +2,18 @@
 
 #[macro_use]
 extern crate lazy_static;
-extern crate serde_json;
+extern crate bincode;
 extern crate test;
 
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 use std::path::{Path};
 use test::Bencher;
 
-use serde_json::{self as json};
+use bincode::serde as bin;
 
 extern crate hyphenation;
-use hyphenation::{load, Corpus, Exceptions, Patterns, Hyphenation, FullTextHyphenation, Language};
+use hyphenation::*;
 
 
 fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }
@@ -29,36 +29,6 @@ lazy_static! {
     };
 }
 
-
-#[bench]
-fn parse_patterns_en_us(b: &mut Bencher) {
-    let mut f = load::data_file(Language::English_US, "pat").unwrap();
-    let mut buffer = Vec::new();
-    f.read_to_end(&mut buffer);
-
-    let mut ps = Patterns::new();
-    b.iter(|| {
-        let pairs: Vec<(String, Vec<u8>)> = json::from_slice(&buffer).unwrap();
-        for p in pairs {
-            ps.insert(p);
-        }
-    });
-}
-
-#[bench]
-fn parse_exceptions_en_us(b: &mut Bencher) {
-    let mut f = load::data_file(Language::English_US, "hyp").unwrap();
-    let mut buffer = Vec::new();
-    f.read_to_end(&mut buffer);
-
-    let mut exs = Exceptions::new();
-    b.iter(|| {
-        let pairs: Vec<(String, Vec<u8>)> = json::from_slice(&buffer).unwrap();
-        for ex in pairs {
-            exs.insert(ex);
-        }
-    });
-}
 
 #[bench]
 fn opportunities_en_us(b: &mut Bencher) {
@@ -102,4 +72,14 @@ fn fulltext_hyphenate_en_us(b: &mut Bencher) {
             w.fulltext_hyphenate(&EN_US).count();
         }
     })
+}
+
+
+#[bench]
+fn deserialize_patterns_en_us(b: &mut Bencher) {
+    let slice = load::data_file(Language::English_US, "patterns").unwrap();
+
+    b.iter(|| {
+        test::black_box(bin::deserialize::<Patterns>(slice).unwrap());
+    });
 }

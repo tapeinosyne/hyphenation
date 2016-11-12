@@ -13,20 +13,22 @@ description = "Standard Knuth-Liang hyphenation based on the TeX UTF-8 patterns.
 keywords = ["text", "typesetting"]
 
 
-include = [ "Cargo.toml", "build.rs", "src/*", "tests/*", "benches/*"
-          , "patterns/*", "README.md", "LICENSE-APACHE", "LICENSE-MIT" ]
-
+include = ["**/*.rs", "**/Cargo.toml", "patterns-tex", "**/*.md", "LICENSE*"]
 build = "build.rs"
 
 
 [dependencies]
-fnv = "^1.0"
-serde_json = "^0.8"
 klpattern = { path = "klpattern", version = "0.6.0" }
+bincode = "^0.6"
+fnv = "^1.0"
 unicode-segmentation = "^0.1"
 
 [build-dependencies]
+klpattern = { path = "klpattern", version = "0.6.0" }
+bincode = "^0.6"
 pocket-resources = "^0.3"
+serde = "^0.8"
+unicode-normalization = "^0.1"
 
 [dev-dependencies]
 lazy_static = "^0.2"

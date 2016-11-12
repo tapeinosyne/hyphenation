@@ -73,9 +73,9 @@
 //! assert_eq!(s4, "an-frac-tu-ous".to_owned());
 //! ```
 
+extern crate bincode;
 extern crate fnv;
 extern crate klpattern;
-extern crate serde_json;
 extern crate unicode_segmentation;
 
 mod resources;
