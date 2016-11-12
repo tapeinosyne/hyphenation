@@ -12,7 +12,7 @@ use language::{Corpus, Language, mins, tag};
 use resources::ResourceId;
 
 
-pub fn data_file(lang: Language, suffix: &str) -> Result<&[u8], Error> {
+pub fn retrieve_resource(lang: Language, suffix: &str) -> Result<&[u8], Error> {
     let fname = format!("{}.{}.bincode", tag(lang), suffix);
     let res: Option<ResourceId> = ResourceId::from_name(&fname);
 
@@ -23,14 +23,14 @@ pub fn data_file(lang: Language, suffix: &str) -> Result<&[u8], Error> {
 }
 
 pub fn patterns(lang: Language) -> Result<Patterns, Error> {
-    let f = try!(data_file(lang, "patterns"));
+    let f = try!(retrieve_resource(lang, "patterns"));
     let trie: Patterns = try!(bin::deserialize(f));
 
     Ok(trie)
 }
 
 pub fn exceptions(lang: Language) -> Result<Exceptions, Error> {
-    let f = try!(data_file(lang, "exceptions"));
+    let f = try!(retrieve_resource(lang, "exceptions"));
     let trie: Exceptions = try!(bin::deserialize(f));
 
     Ok(trie)

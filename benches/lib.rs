@@ -77,7 +77,7 @@ fn fulltext_hyphenate_en_us(b: &mut Bencher) {
 
 #[bench]
 fn deserialize_patterns_en_us(b: &mut Bencher) {
-    let slice = load::data_file(Language::English_US, "patterns").unwrap();
+    let slice = load::retrieve_resource(Language::English_US, "patterns").unwrap();
 
     b.iter(|| {
         test::black_box(bin::deserialize::<Patterns>(slice).unwrap());
