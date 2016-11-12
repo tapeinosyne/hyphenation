@@ -2,8 +2,7 @@
 publish = false
 
 name = "klpattern"
-version = "0.6.0" # version-locked to main `hyphenation` crate
-
+version = "0.6.0"  # version-locked to main `hyphenation` crate
 authors = ["ndr <ndr@qef.io>"]
 
 build = "build.rs"
