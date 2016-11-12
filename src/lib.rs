@@ -87,4 +87,9 @@ pub mod load;
 pub use klpattern::{KLPair, KLPTrie, Exceptions, Patterns};
 pub use hyphenator::{Hyphenation, FullTextHyphenation, Standard};
 pub use language::{Language, Corpus};
+
+// Note: the name "load" is misleading, as we are merely accessing embedded tries.
+// However, future versions of `hyphenation` should support both embedding
+// and runtime loading of pattern data, with loading being the default;
+// anticipating such changes, we keep `load` as a public export.
 pub use load::{language as load};
