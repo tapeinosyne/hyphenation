@@ -1,4 +1,5 @@
 # hyphenation
+
 Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ctan.org/tex-archive/language/hyph-utf8).
 
 ```toml
@@ -8,6 +9,7 @@ hyphenation = "0.5.0"
 
 
 ## Documentation
+
 [Docs.rs](https://docs.rs/hyphenation)
 
 
@@ -20,13 +22,12 @@ use hyphenation::Language::{English_US};
 // Load hyphenation data for American English from the pattern repository.
 let english_us = hyphenation::load(English_US).unwrap();
 
-// The byte indices of valid hyphenation points within a word.
+// Compute the byte indices of valid hyphenation points within a word.
 let indices = "hyphenation".opportunities(&english_us);
 assert_eq!(indices, vec![2, 6]);
 
-// An iterator that breaks a word according to standard hyphenation practices.
+// Build an iterator that breaks a word according to standard hyphenation practices.
 let h: Standard = "hyphenation".hyphenate(&english_us);
-                // hy-phen-ation
 
 // Collect the lazy hyphenator `h` into substring slices over the original string.
 let v: Vec<&str> = h.collect();
@@ -53,24 +54,30 @@ assert_eq!(s3, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
 
 
 ### Unicode Normalization
-`hyphenation` operates on strings in Normalization Form C, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate.
 
-This form is ubiquitous, and you probably need not worry about it. Nevertheless, it would be best to ensure NFC when working with any of the following languages:
+For preference, `hyphenation` should operate on strings in a known *normalization form*, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate. This is particularly important when working with non-ASCII languages that feature combining marks.
 
-- Assamese
-- Bengali
-- Church Slavonic
-- Greek (Ancient, Monotonic, Polytonic)
-- Punjabi
-- Sanskrit
+(Notably exempt from such concerns are `English_US` and `English_GB`, for which normalization is ordinarily inconsequential.)
 
+The normalization form expected by `hyphenation` is determined at build time. By default, `hyphenation` is compiled to work with strings in Normalization Form C; you may specify another form in your Cargo manifest, like so:
 
-## Pattern Data
+```toml
+[dependencies.hyphenation]
+version = "0.6.0"
+features = ["nfd"]
+```
 
-The script used to parse, normalize, and convert the TeX hyphenation patterns may be found at [ndr-qef/hyph-utf8.json](https://github.com/ndr-qef/hyph-utf8.json).
+The `features` field takes a list containing the desired normalization form; namely, the value of `features` must be *one* of the following:
+
+- `["none"]`, to use the [TeX UTF-8 patterns](http://www.ctan.org/tex-archive/language/hyph-utf8) as they are;
+- `["nfc"]`, for canonical composition;
+- `["nfd"]`, for canonical decomposition;
+- `["nfkc"]`, for compatibility composition;
+- `["nfkd"]`, for compatibility decomposition.
 
 
 ## License
+
 `hyphenation` © 2016 ndr-qef, dual-licensed under the terms of either:
   - The Apache License, Version 2.0
   - The MIT license
