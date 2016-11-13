@@ -1,4 +1,6 @@
+corpora
 patterns
+
 target
 Cargo.lock
 .DS_Store
