@@ -37,17 +37,17 @@ none = []
 
 [dependencies]
 klpattern = { path = "klpattern", version = "0.6.0" }
-bincode = "^0.6"
-fnv = "^1.0"
-unicode-segmentation = "^0.1"
+bincode = "0.6"
+fnv = "1.0"
+unicode-segmentation = "0.1"
 
 [build-dependencies]
 klpattern = { path = "klpattern", version = "0.6.0" }
-bincode = "^0.6"
-pocket-resources = "^0.3"
-serde = "^0.8"
-unicode-normalization = "^0.1"
+bincode = "0.6"
+pocket-resources = "0.3"
+serde = "0.8"
+unicode-normalization = "0.1"
 
 [dev-dependencies]
-lazy_static = "^0.2"
-quickcheck = "^0.3"
+lazy_static = "0.2"
+quickcheck = "0.3"
