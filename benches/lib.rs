@@ -32,10 +32,8 @@ lazy_static! {
 
 #[bench]
 fn opportunities_en_us(b: &mut Bencher) {
-    let mut ws = WORDS.iter();
-
     b.iter(|| {
-        for w in ws.by_ref() {
+        for w in WORDS.iter() {
             w.opportunities(&EN_US);
         }
     })
@@ -43,10 +41,8 @@ fn opportunities_en_us(b: &mut Bencher) {
 
 #[bench]
 fn hyphenate_en_us(b: &mut Bencher) {
-    let mut ws = WORDS.iter();
-
     b.iter(|| {
-        for w in ws.by_ref() {
+        for w in WORDS.iter() {
             w.hyphenate(&EN_US).count();
         }
     })
@@ -54,10 +50,8 @@ fn hyphenate_en_us(b: &mut Bencher) {
 
 #[bench]
 fn fulltext_opportunities_en_us(b: &mut Bencher) {
-    let mut ws = WORDS.iter();
-
     b.iter(|| {
-        for w in ws.by_ref() {
+        for w in WORDS.iter() {
             w.fulltext_opportunities(&EN_US);
         }
     })
@@ -65,10 +59,8 @@ fn fulltext_opportunities_en_us(b: &mut Bencher) {
 
 #[bench]
 fn fulltext_hyphenate_en_us(b: &mut Bencher) {
-    let mut ws = WORDS.iter();
-
     b.iter(|| {
-        for w in ws.by_ref() {
+        for w in WORDS.iter() {
             w.fulltext_hyphenate(&EN_US).count();
         }
     })
