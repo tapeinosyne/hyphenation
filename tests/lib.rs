@@ -102,6 +102,10 @@ fn basics() {
     assert_eq!(v3, vec!["hy", "pha"]);
     assert_eq!(v4, vec!["Word hy", "phen", "ation by com", "puter."]);
 
+    let ex1: Standard = "retribution".hyphenate(&EN_US);
+    let v_ex1: Vec<&str> = ex1.clone().collect();
+    assert_eq!(v_ex1, vec!["ret", "ri", "bu", "tion"]);
+
     let s1: String = h1.punctuate().collect();
     assert_eq!(s1, "hy\u{ad}phen\u{ad}ation".to_owned());
 
