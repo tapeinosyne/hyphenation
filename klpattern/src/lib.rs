@@ -138,19 +138,21 @@ impl<'a> KLPTrie<'a> for Exceptions {
     /// Inserts a Knuth-Liang exception pair into the map.
     ///
     /// If the pattern already exists, the old score is returned; if not, `None` is.
-    fn insert(&mut self, klpair: KLPair) -> Option<Vec<u8>> {
-        let (p, score) = klpair;
+    fn insert(&mut self, (pattern, score): KLPair) -> Option<Vec<u8>> {
         let Exceptions(ref mut m) = *self;
 
-        m.insert(p, score)
+        m.insert(pattern, score)
     }
 
     /// Retrieves the score for each hyphenation point of `word`.
     fn score(&'a self, word: &str) -> Self::Score {
         let Exceptions(ref m) = *self;
-        let w = word.to_lowercase();
+        let w = match word.chars().any(|c| c.is_uppercase()) {
+            true => Cow::Owned(word.to_lowercase()),
+            false => Cow::Borrowed(word)
+        };
 
-        m.get(&w)
+        m.get(w.as_ref())
     }
 
     fn is_empty(&self) -> bool {
