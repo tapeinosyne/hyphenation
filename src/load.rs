@@ -7,7 +7,7 @@ use std::io;
 
 use bincode::serde as bin;
 
-use klpattern::{KLPTrie, Exceptions, Patterns};
+use klpattern::{Exceptions, Patterns};
 use language::{Corpus, Language, mins, tag};
 use resources::ResourceId;
 
@@ -45,7 +45,7 @@ pub fn language(lang: Language) -> Result<Corpus, Error> {
     Ok(Corpus {
         language: lang,
         patterns: ps,
-        exceptions: if !exs.is_empty() { Some(exs) } else { None },
+        exceptions: exs,
         left_min: l,
         right_min: r
     })

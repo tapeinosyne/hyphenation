@@ -13,7 +13,7 @@ use klpattern::{Exceptions, Patterns};
 pub struct Corpus {
     pub language: Language,
     pub patterns: Patterns,
-    pub exceptions: Option<Exceptions>,
+    pub exceptions: Exceptions,
     pub left_min: usize,
     pub right_min: usize
 }
