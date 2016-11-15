@@ -2,7 +2,7 @@
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use klpattern::KLPTrie;
+use hyphenation_commons::KLPTrie;
 use language::{Corpus};
 use utilia::{Interspersable, Intersperse};
 

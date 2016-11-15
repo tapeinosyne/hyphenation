@@ -75,7 +75,7 @@
 
 extern crate bincode;
 extern crate fnv;
-extern crate klpattern;
+extern crate hyphenation_commons;
 extern crate unicode_segmentation;
 
 mod resources;
@@ -84,7 +84,7 @@ pub mod hyphenator;
 pub mod language;
 pub mod load;
 
-pub use klpattern::{KLPair, KLPTrie, Exceptions, Patterns};
+pub use hyphenation_commons::{KLPair, KLPTrie, Exceptions, Patterns};
 pub use hyphenator::{Hyphenation, FullTextHyphenation, Standard};
 pub use language::{Language, Corpus};
 

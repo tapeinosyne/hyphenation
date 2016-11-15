@@ -3,7 +3,7 @@ extern crate pocket_resources;
 extern crate serde;
 extern crate unicode_normalization;
 
-extern crate klpattern;
+extern crate hyphenation_commons;
 
 use std::ascii::AsciiExt;
 use std::env;
@@ -18,7 +18,7 @@ use serde::ser;
 use bincode::SizeLimit;
 use bincode::serde as bin;
 
-use klpattern::{KLPair, KLPTrie, Exceptions, Patterns};
+use hyphenation_commons::*;
 
 
 // User configuration

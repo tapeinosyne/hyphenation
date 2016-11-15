@@ -36,16 +36,16 @@ none = []
 
 
 [workspace]
-members = ["klpattern"]
+members = ["hyphenation_commons"]
 
 [dependencies]
-klpattern = { path = "klpattern", version = "0.6.0" }
+hyphenation_commons = { path = "hyphenation_commons", version = "0.6.0" }
 bincode = "0.6"
 fnv = "1.0"
 unicode-segmentation = "0.1"
 
 [build-dependencies]
-klpattern = { path = "klpattern", version = "0.6.0" }
+hyphenation_commons = { path = "hyphenation_commons", version = "0.6.0" }
 bincode = "0.6"
 pocket-resources = "0.3"
 serde = "0.8"

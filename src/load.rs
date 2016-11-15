@@ -7,7 +7,7 @@ use std::io;
 
 use bincode::serde as bin;
 
-use klpattern::{Exceptions, Patterns};
+use hyphenation_commons::{Exceptions, Patterns};
 use language::{Corpus, Language, mins, tag};
 use resources::ResourceId;
 

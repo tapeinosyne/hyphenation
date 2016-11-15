@@ -3,7 +3,7 @@
 
 #![allow(non_camel_case_types)]
 
-use klpattern::{Exceptions, Patterns};
+use hyphenation_commons::{Exceptions, Patterns};
 
 /// A `Corpus` carries hyphenation data and parameters.
 ///
