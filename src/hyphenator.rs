@@ -1,12 +1,11 @@
 //! Hyphenating iterators.
 
-use std::borrow::Cow;
-
 use unicode_segmentation::UnicodeSegmentation;
 
 use klpattern::KLPTrie;
 use language::{Corpus};
 use utilia::{Interspersable, Intersperse};
+
 
 pub trait Hyphenation<Hyphenator> where Hyphenator : Iterator {
     /// Returns the indices of valid hyphenation points within the given word.
@@ -99,16 +98,28 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
             return vec![];
         }
 
-        let pts = match corp.exceptions.iter()
-                            .filter_map(|exs| exs.score(self))
-                            .next() {
-                                Some(vec) => Cow::Borrowed(vec),
-                                None => Cow::Owned(corp.patterns.score(self))
+        let score;
+        match corp.exceptions.score(self) {
+            None => score = corp.patterns.score(self),
+            Some(known_score) => {
+                let ops = known_score.iter()
+                    .enumerate()
+                    .filter(|&(_, &p)| p == 1)
+                    .map(|(i, _)| i)
+                    .collect();
+
+                return ops;
+            }
         };
 
-        self.char_indices().skip(l_min)
-            .zip(&pts[l_min - 1 .. pts.len() - r_min + 1])
-            .filter(|&(_, p)| p % 2 != 0)
+        let cis = self.char_indices();
+        let (l, r) = (cis.clone().skip(l_min).next().unwrap().0,
+                      cis.rev().skip(r_min.saturating_sub(2)).next().unwrap().0);
+
+        self.bytes()
+            .enumerate().skip(1)
+            .zip(score.as_slice())
+            .filter(|&((i, _), p)| p % 2 != 0 && i >= l && i < r && self.is_char_boundary(i))
             .map(|((i, _), _)| i)
             .collect()
     }
@@ -127,31 +138,10 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
 
 impl<'a> FullTextHyphenation<Standard<'a>> for &'a str {
     fn fulltext_opportunities(self, corp: &Corpus) -> Vec<usize> {
-        let (l_min, r_min) = (corp.left_min, corp.right_min);
-        let length_min = l_min + r_min;
-
-        if self.chars().count() < length_min {
-            return vec![];
-        }
-
         let by_word = self.split_word_bound_indices();
+
         by_word.flat_map(|(i, word)| {
-            let pts = match corp.exceptions.iter()
-                                .filter_map(|exs| exs.score(word))
-                                .next() {
-                                    Some(vec) => Cow::Borrowed(vec),
-                                    None => Cow::Owned(corp.patterns.score(word))
-            }.into_owned();
-
-            let hyph_length = pts.len();
-            let remaining = if hyph_length >= length_min - 1 {
-                hyph_length + 2 - length_min
-            } else { 0 };
-
-            word.char_indices().skip(l_min)
-                .zip(pts.into_iter().skip(l_min - 1).take(remaining))
-                .filter(|&(_, p)| p % 2 != 0)
-                .map(move |((i1, _), _)| i + i1)
+            word.opportunities(corp).into_iter().map(move |i1| i + i1)
         }).collect()
     }
 

@@ -5,6 +5,7 @@ extern crate unicode_normalization;
 
 extern crate klpattern;
 
+use std::ascii::AsciiExt;
 use std::env;
 use std::error;
 use std::fmt;
@@ -32,7 +33,7 @@ mod configurable {
     // are defined via conditional compilation.
     //
     // If no feature is explicitly set, we default to the declarations for NFC.
-    
+
     // Neither Cargo nor rustc allows us to set exclusive features; we must indulge
     // them with this clumsy branle of cfg declarations.
 
@@ -74,12 +75,17 @@ trait KLPattern {
         Self::value(c.clone()) == None
     }
 
-    fn parse_score<I>(cs: I) -> Vec<u8> where I: Iterator<Item = char> {
+    fn parse_score<I>(bytes: I) -> Vec<u8> where I: Iterator<Item = u8> {
         let mut result = vec![];
         let mut skip_interval = false;
 
-        for c in cs {
-            match (Self::value(c), skip_interval) {
+        for b in bytes {
+            let val = match b.is_ascii() {
+                true => Self::value(b as char),
+                false => None
+            };
+
+            match (val, skip_interval) {
                 (Some(n), _) => {
                     skip_interval = true;
                     result.push(n);
@@ -96,10 +102,9 @@ trait KLPattern {
     fn klpair(&self) -> KLPair {
         let str_klp = &self.unklp();
         let normalized: String = normalize(str_klp).collect();
-        let as_chars = normalized.chars();
 
-        let alphabetical: String = as_chars.clone().filter(Self::non_scoring).collect();
-        let score = Self::parse_score(as_chars);
+        let alphabetical: String = normalized.chars().filter(Self::non_scoring).collect();
+        let score = Self::parse_score(normalized.bytes());
 
         (alphabetical, score)
     }

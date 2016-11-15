@@ -14,7 +14,6 @@ use std::borrow::Cow;
 use std::cmp::{max};
 use std::collections::hash_map::{HashMap, Entry};
 use std::hash::BuildHasherDefault;
-use std::iter::{once};
 use std::mem;
 
 use fnv::FnvHasher;
@@ -62,9 +61,9 @@ impl<'a> KLPTrie<'a> for Patterns {
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     ///
     /// If the pattern already exists, the old tally is returned; if not, `None` is.
-    fn insert(&mut self, (p, tally): KLPair) -> Option<Vec<u8>> {
-        let node = p.chars().fold(self, |t, c| {
-            match t.descendants.entry(c) {
+    fn insert(&mut self, (pattern, tally): KLPair) -> Option<Vec<u8>> {
+        let node = pattern.bytes().fold(self, |t, b| {
+            match t.descendants.entry(b) {
                 Entry::Vacant(e) => e.insert(Patterns::new()),
                 Entry::Occupied(e) => e.into_mut()
             }
@@ -88,8 +87,8 @@ impl<'a> KLPTrie<'a> for Patterns {
             true => Cow::Owned(word.to_lowercase()),
             false => Cow::Borrowed(word)
         };
-        let cs = once('.').chain(w.chars()).chain(once('.'));
-        let match_length = cs.clone().count();
+        let match_str = [".", w.as_ref(), "."].concat();
+        let match_length = match_str.len();
 
         if match_length <= 3 {
             return vec![];
@@ -100,8 +99,8 @@ impl<'a> KLPTrie<'a> for Patterns {
 
         for i in 0..match_length {
             let mut m = &self.descendants;
-            for c in cs.clone().skip(i) {
-                match m.get(&c) {
+            for b in match_str.bytes().skip(i) {
+                match m.get(&b) {
                     Some(&Patterns { tally: Some(ref t), descendants: ref m1 }) => {
                         m = m1;
                         for (j, &p) in t.iter().enumerate() {

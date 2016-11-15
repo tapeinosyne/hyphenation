@@ -2,7 +2,7 @@
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Patterns {
     pub tally: Option<Vec<u8>>,
-    pub descendants: HashMap<char, Patterns, BuildHasherDefault<FnvHasher>>
+    pub descendants: HashMap<u8, Patterns, BuildHasherDefault<FnvHasher>>
 }
 
 /// A specialized hash map of pattern-score pairs.
