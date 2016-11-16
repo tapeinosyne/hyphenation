@@ -13,7 +13,7 @@ description = "Standard Knuth-Liang hyphenation based on the TeX UTF-8 patterns.
 keywords = ["text", "typesetting"]
 
 
-include = ["**/*.rs", "**/Cargo.toml", "patterns-tex", "**/*.md", "LICENSE*"]
+include = ["**/*.rs", "**/Cargo.toml", "patterns-tex/*", "**/*.md", "LICENSE*"]
 build = "build.rs"
 
 
