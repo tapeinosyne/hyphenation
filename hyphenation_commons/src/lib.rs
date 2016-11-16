@@ -41,7 +41,6 @@ pub trait KLPTrie<'a> {
     fn score(&'a self, &str) -> Self::Score;
 
     fn is_empty(&self) -> bool;
-
 }
 
 
