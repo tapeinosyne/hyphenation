@@ -78,7 +78,7 @@ The `features` field takes a list containing the desired normalization form; nam
 
 ## License
 
-`hyphenation` © 2016 ndr-qef, dual-licensed under the terms of either:
+`hyphenation` © 2016 tapeinosyne, dual-licensed under the terms of either:
   - The Apache License, Version 2.0
   - The MIT license
 

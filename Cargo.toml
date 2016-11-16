@@ -4,8 +4,8 @@ version = "0.6.0"
 
 authors = ["ndr <ndr@qef.io>"]
 license = "Apache-2.0/MIT"
-repository = "https://github.com/ndr-qef/hyphenation"
-homepage = "https://github.com/ndr-qef/hyphenation"
+repository = "https://github.com/tapeinosyne/hyphenation"
+homepage = "https://github.com/tapeinosyne/hyphenation"
 documentation = "https://docs.rs/hyphenation"
 
 readme = "README.md"
