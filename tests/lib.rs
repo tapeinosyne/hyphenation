@@ -124,9 +124,8 @@ fn basics() {
 }
 
 #[test]
-#[should_panic(expected = "assertion failed")]
 fn known_inaccuracies() {
     let example1: Vec<&str> = "chionididae".hyphenate(&EN_US).collect();
 
-    assert!(example1 == vec!["chi", "o", "nid", "i", "dae"]);
+    assert_ne!(example1, vec!["chi", "o", "nid", "i", "dae"]);
 }
