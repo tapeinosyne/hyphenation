@@ -47,7 +47,19 @@
 //! assert_eq!(v, vec!["hy", "phen", "ation"]);
 //! ```
 //!
+//! An hyphenator always knows its exact length, which means that we can
+//! retrieve the number of remaining word segments with `.len()`.
+//!
+//! ```ignore
+//! let mut iter = "hyphenation".hyphenate(&english_us);
+//! assert_eq!(iter.len(), 3);
+//! iter.next();
+//! assert_eq!(iter.len(), 2);
+//! ```
+//!
+//!
 //! ## Full-text Hyphenation
+//!
 //! While hyphenation is always performed on a per-word basis, convenience
 //! calls for a subtrait to provide methods to work with full text.
 //!
@@ -69,8 +81,8 @@
 //! let s3: String = h2.clone().punctuate().collect();
 //! assert_eq!(s3, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
 //!
-//! let s4: String = h2.punctuate_with("-").collect()
-//! assert_eq!(s4, "an-frac-tu-ous".to_owned());
+//! let s4: String = h2.punctuate_with("‧").collect()
+//! assert_eq!(s4, "an‧frac‧tu‧ous".to_owned());
 //! ```
 
 extern crate bincode;
