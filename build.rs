@@ -5,7 +5,6 @@ extern crate unicode_normalization;
 
 extern crate hyphenation_commons;
 
-use std::ascii::AsciiExt;
 use std::env;
 use std::error;
 use std::fmt;
@@ -65,74 +64,56 @@ mod configurable {
 
 // Pattern parsing
 
-trait KLPattern {
-    fn klp(String) -> Self;
-    fn unklp(&self) -> &str;
-
+trait Parse<'a> : KLPTrie<'a> {
     fn value(char) -> Option<u8>;
 
     fn non_scoring(c: &char) -> bool {
         Self::value(c.clone()) == None
     }
 
-    fn parse_score<I>(bytes: I) -> Vec<u8> where I: Iterator<Item = u8> {
-        let mut result = vec![];
-        let mut skip_interval = false;
+    fn tally<I>(bytes: I) -> Self::Tally
+        where I: Iterator<Item = u8>;
 
-        for b in bytes {
-            let val = match b.is_ascii() {
-                true => Self::value(b as char),
-                false => None
-            };
-
-            match (val, skip_interval) {
-                (Some(n), _) => {
-                    skip_interval = true;
-                    result.push(n);
-                },
-                (None, false) => result.push(0),
-                (None, true) => skip_interval = false
-            }
-        }
-
-        if !skip_interval { result.push(0) }
-        result
-    }
-
-    fn klpair(&self) -> KLPair {
-        let str_klp = &self.unklp();
+    fn klpair(str_klp: &str) -> (String, Self::Tally) {
         let normalized: String = normalize(str_klp).collect();
 
         let alphabetical: String = normalized.chars().filter(Self::non_scoring).collect();
-        let score = Self::parse_score(normalized.bytes());
+        let score = Self::tally(normalized.bytes());
 
         (alphabetical, score)
     }
 }
 
-
-#[derive(Clone, Debug)]
-struct Pattern(String);
-
-#[derive(Clone, Debug)]
-struct Exception(String);
-
-impl KLPattern for Pattern {
-    fn klp(s: String) -> Self { Pattern(s) }
-    fn unklp(&self) -> &str { self.0.as_ref() }
-
+impl<'a> Parse<'a> for Patterns {
     fn value(c: char) -> Option<u8> { c.to_digit(10).map(|n| n as u8) }
+
+    fn tally<I>(bytes: I) -> Self::Tally
+        where I: Iterator<Item = u8>
+    {
+        bytes.enumerate()
+             .filter_map(|(i, b)| Self::value(b as char).map(|v| (i as u8, v)))
+             .enumerate()
+             .map(|(j, (i, v))| (i - j as u8, v))
+             .collect()
+    }
 }
 
-impl KLPattern for Exception {
-    fn klp(s: String) -> Self { Exception(s) }
-    fn unklp(&self) -> &str { self.0.as_ref() }
-
+impl<'a> Parse<'a> for Exceptions {
     fn value(c: char) -> Option<u8> {
         match c == '-' {
             true => Some(1),
             false => None
         }
+    }
+
+    fn tally<I>(bytes: I) -> Self::Tally
+        where I: Iterator<Item = u8>
+    {
+        bytes.enumerate()
+             .filter_map(|(i, b)| Self::value(b as char).map(|_| i))
+             .enumerate()
+             .map(|(j, i)| i - j)
+             .collect()
     }
 }
 
@@ -155,22 +136,20 @@ pub fn load_by_line(lang: &str, suffix: &str) -> Result<io::Lines<io::BufReader<
     Ok(reader.lines())
 }
 
-trait KLPTrieIO<'a> : KLPTrie<'a> + ser::Serialize {
-    type KLP : KLPattern;
-
+trait KLPTrieIO<'a> : KLPTrie<'a> + Parse<'a> + ser::Serialize {
     fn suffix_in() -> &'static str;
     fn suffix_out() -> &'static str;
 
-    fn build(mut self, lang: &str) -> Self where Self: Sized {
+    fn build(lang: &str) -> Self where Self: Sized {
         let textual_klps = load_by_line(lang, Self::suffix_in()).unwrap();
-        let mut klpairs: Vec<KLPair> = textual_klps.map(|p| Self::KLP::klp(p.unwrap()).klpair()).collect();
-
-        klpairs.sort();
+        let mut klpairs: Vec<_> = textual_klps.map(|res| Self::klpair(&res.unwrap())).collect();
+        klpairs.sort_by_key(|&(ref ptn, _)| ptn.clone());
         klpairs.dedup();
 
-        for klp in klpairs.into_iter() { self.insert(klp); }
+        let mut trie = Self::new();
+        for klp in klpairs.into_iter() { trie.insert(klp); }
 
-        self
+        trie
     }
 
     fn write(&self, lang: &'a str) -> Result<&'a str, Error> {
@@ -180,7 +159,6 @@ trait KLPTrieIO<'a> : KLPTrie<'a> + ser::Serialize {
         let fpath = work_dir.join("patterns").join(fname);
 
         let mut buffer = io::BufWriter::new( File::create(fpath) ? );
-
         bin::serialize_into(&mut buffer, &self, SizeLimit::Bounded(10_000_000)) ?;
         buffer.write("\n".as_bytes()) ?;
 
@@ -189,15 +167,11 @@ trait KLPTrieIO<'a> : KLPTrie<'a> + ser::Serialize {
 }
 
 impl<'a> KLPTrieIO<'a> for Patterns {
-    type KLP = Pattern;
-
     fn suffix_in() -> &'static str { "pat" }
     fn suffix_out() -> &'static str { "patterns" }
 }
 
 impl<'a> KLPTrieIO<'a> for Exceptions {
-    type KLP = Exception;
-
     fn suffix_in() -> &'static str { "hyp" }
     fn suffix_out() -> &'static str { "exceptions" }
 }
@@ -284,8 +258,8 @@ fn main() {
 
 
     for lang in langs.iter() {
-        let patterns = Patterns::new().build(lang);
-        let exceptions = Exceptions::new().build(lang);
+        let patterns = Patterns::build(lang);
+        let exceptions = Exceptions::build(lang);
 
         fs::create_dir_all("patterns").unwrap();
         patterns.write(lang).unwrap();

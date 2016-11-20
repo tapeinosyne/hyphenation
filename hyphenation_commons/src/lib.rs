@@ -33,10 +33,11 @@ include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 
 pub trait KLPTrie<'a> {
     type Score;
+    type Tally : Eq;
 
     fn new() -> Self;
 
-    fn insert(&mut self, KLPair) -> Option<Vec<u8>>;
+    fn insert(&mut self, (String, Self::Tally)) -> Option<Self::Tally>;
 
     fn score(&'a self, &str) -> Self::Score;
 
@@ -46,6 +47,7 @@ pub trait KLPTrie<'a> {
 
 impl<'a> KLPTrie<'a> for Patterns {
     type Score = Vec<u8>;
+    type Tally = Vec<(u8, u8)>;
 
     /// Creates an empty `Patterns` trie.
     fn new() -> Patterns {
@@ -60,7 +62,7 @@ impl<'a> KLPTrie<'a> for Patterns {
     /// Inserts a Knuth-Liang hyphenation pair into the trie.
     ///
     /// If the pattern already exists, the old tally is returned; if not, `None` is.
-    fn insert(&mut self, (pattern, tally): KLPair) -> Option<Vec<u8>> {
+    fn insert(&mut self, (pattern, tally): (String, Self::Tally)) -> Option<Self::Tally> {
         let node = pattern.bytes().fold(self, |t, b| {
             match t.descendants.entry(b) {
                 Entry::Vacant(e) => e.insert(Patterns::new()),
@@ -68,13 +70,13 @@ impl<'a> KLPTrie<'a> for Patterns {
             }
         });
 
-        let mut retv = None;
         match node.tally {
-            Some(ref mut old) => retv = Some(mem::replace(old, tally)),
-            None => node.tally = Some(tally)
+            Some(ref mut old) => Some(mem::replace(old, tally)),
+            None => {
+                node.tally = Some(tally);
+                None
+            }
         }
-
-        retv
     }
 
     /// Assigns a score to each potential hyphenation point.
@@ -102,8 +104,8 @@ impl<'a> KLPTrie<'a> for Patterns {
                 match m.get(&b) {
                     Some(&Patterns { tally: Some(ref t), descendants: ref m1 }) => {
                         m = m1;
-                        for (j, &p) in t.iter().enumerate() {
-                            let k = i + j;
+                        for &(j, p) in t.iter() {
+                            let k = i + j as usize;
                             if k > 1 && k <= hyphenable_length {
                                 let p1 = points[k - 2];
                                 points[k - 2] = max(p, p1)
@@ -126,7 +128,8 @@ impl<'a> KLPTrie<'a> for Patterns {
 
 
 impl<'a> KLPTrie<'a> for Exceptions {
-    type Score = Option<&'a Vec<u8>>;
+    type Score = Option<&'a Vec<usize>>;
+    type Tally = Vec<usize>;
 
     /// Creates an empty `Exceptions` map.
     fn new() -> Exceptions {
@@ -136,7 +139,7 @@ impl<'a> KLPTrie<'a> for Exceptions {
     /// Inserts a Knuth-Liang exception pair into the map.
     ///
     /// If the pattern already exists, the old score is returned; if not, `None` is.
-    fn insert(&mut self, (pattern, score): KLPair) -> Option<Vec<u8>> {
+    fn insert(&mut self, (pattern, score): (String, Self::Tally)) -> Option<Self::Tally> {
         let Exceptions(ref mut m) = *self;
 
         m.insert(pattern, score)

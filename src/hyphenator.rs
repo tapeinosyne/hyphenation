@@ -98,30 +98,25 @@ impl<'a> Hyphenation<Standard<'a>> for &'a str {
             return vec![];
         }
 
-        let score;
         match corp.exceptions.score(self) {
-            None => score = corp.patterns.score(self),
-            Some(known_score) => {
-                let ops = known_score.iter()
-                    .enumerate()
-                    .filter(|&(_, &p)| p == 1)
-                    .map(|(i, _)| i)
-                    .collect();
+            Some(known_score) => known_score.clone(),
+            None => {
+                let score = corp.patterns.score(self);
+                let cis = self.char_indices();
+                let (l, r) = (cis.clone().skip(l_min).next().unwrap().0,
+                              cis.rev().skip(r_min.saturating_sub(2)).next().unwrap().0);
 
-                return ops;
+                self.bytes()
+                    .enumerate().skip(1)
+                    .zip(&score)
+                    .filter(|&((i, _), p)|
+                        p % 2 != 0
+                        && i >= l && i < r
+                        && self.is_char_boundary(i))
+                    .map(|((i, _), _)| i)
+                    .collect()
             }
-        };
-
-        let cis = self.char_indices();
-        let (l, r) = (cis.clone().skip(l_min).next().unwrap().0,
-                      cis.rev().skip(r_min.saturating_sub(2)).next().unwrap().0);
-
-        self.bytes()
-            .enumerate().skip(1)
-            .zip(score.as_slice())
-            .filter(|&((i, _), p)| p % 2 != 0 && i >= l && i < r && self.is_char_boundary(i))
-            .map(|((i, _), _)| i)
-            .collect()
+        }
     }
 
     /// Returns an iterator over string slices separated by valid hyphenation
