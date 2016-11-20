@@ -1,3 +1,7 @@
+## 0.6.1
+- Slightly reduced embedded pattern size.
+
+
 ## 0.6.0
 
 - Unicode normalization can be configured via build flags.
