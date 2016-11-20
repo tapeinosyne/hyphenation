@@ -4,7 +4,7 @@ Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ct
 
 ```toml
 [dependencies]
-hyphenation = "0.6.0"
+hyphenation = "0.6"
 ```
 
 
