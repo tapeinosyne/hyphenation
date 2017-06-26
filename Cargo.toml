@@ -53,4 +53,4 @@ unicode-normalization = "0.1"
 
 [dev-dependencies]
 lazy_static = "0.2"
-quickcheck = "0.3"
+quickcheck = "0.4"
