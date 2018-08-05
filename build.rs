@@ -178,6 +178,10 @@ impl<'a> KLPTrieIO<'a> for Exceptions {
 
 
 fn main() {
+    if Path::new("patterns").is_dir() {
+        return;
+    }
+
     let output_suffixes = vec![Patterns::suffix_out(), Exceptions::suffix_out()];
     let langs = vec![
         "af",
