@@ -178,6 +178,12 @@ impl<'a> KLPTrieIO<'a> for Exceptions {
 
 
 fn main() {
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+
+    if Path::new(&out_dir).join("pocket-resources.rs").exists() {
+        return;
+    }
+
     let output_suffixes = vec![Patterns::suffix_out(), Exceptions::suffix_out()];
     let langs = vec![
         "af",
