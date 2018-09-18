@@ -1,5 +1,5 @@
 corpora
-patterns
+dictionaries
 
 target
 Cargo.lock

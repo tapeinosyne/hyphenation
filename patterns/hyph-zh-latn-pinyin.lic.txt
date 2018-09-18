@@ -1,0 +1,18 @@
+% title: Hyphenation patterns for Chinese pinyin (Mandarin), unaccented
+% copyright: Copyright (C) 1994-2008 Werner Lemberg
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Mandarin Chinese, pinyin transliteration
+%     tag: zh-latn-pinyin
+% version: 4.8.0 (22-May-2008)
+% authors:
+%   -
+%     name: Werner Lemberg
+%     contact: wl (at) gnu.org
+% licence:
+%     name: GPL
+%     version: 2
+%     or_later: true
+%     url: http://www.gnu.org/licenses/gpl.html
+%
