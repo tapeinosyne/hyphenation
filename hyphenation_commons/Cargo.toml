@@ -1,25 +1,15 @@
 [package]
 name = "hyphenation_commons"
-version = "0.6.1"  # version-locked to main `hyphenation` crate
+version = "0.7.0"  # version-locked to the main `hyphenation` crate
 
-authors = ["ndr <ndr@qef.io>"]
+authors = ["Andrew <andrew@banausia.com>"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/tapeinosyne/hyphenation"
 homepage = "https://github.com/tapeinosyne/hyphenation"
 documentation = "https://docs.rs/hyphenation"
 
-description = "Proemial code shared by the hyphenation build script and library"
-
-build = "build.rs"
-
-[features]
-default = ["serde_codegen"]
-unstable = ["serde_derive"]
+description = "Proemial code for the `hyphenation` library"
 
 [dependencies]
-fnv = "^1.0"
-serde = "0.8"
-serde_derive = { version = "0.8", optional = true }
-
-[build-dependencies]
-serde_codegen = { version = "0.8", optional = true }
+serde = { version = "1.0", features = ["derive"] }
+atlatl = { version = "0.1", features = ["serde"] }
