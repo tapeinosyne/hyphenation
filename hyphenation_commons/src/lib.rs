@@ -6,6 +6,7 @@
 #[cfg(feature = "serde_derive")]
 #[macro_use]
 extern crate serde_derive;
+mod language;
 
 extern crate serde;
 extern crate fnv;
