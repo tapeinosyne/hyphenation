@@ -1,11 +1,15 @@
-# hyphenation
+# `hyphenation`
 
-Standard Knuth-Liang hyphenation based on the [TeX UTF-8 patterns](http://www.ctan.org/tex-archive/language/hyph-utf8).
+Hyphenation for UTF-8 strings in a variety of languages.
 
 ```toml
 [dependencies]
-hyphenation = "0.6"
+hyphenation = "0.7"
 ```
+
+Two strategies are available:
+- Standard Knuth–Liang hyphenation, with dictionaries built from the [TeX UTF-8 patterns](http://www.ctan.org/tex-archive/language/hyph-utf8).
+- Extended (“non-standard”) hyphenation based on László Németh's [Automatic non-standard hyphenation in OpenOffice.org](https://www.tug.org/TUGboat/tb27-1/tb86nemeth.pdf), with dictionaries built from Libre/OpenOffice patterns.
 
 
 ## Documentation
@@ -13,73 +17,105 @@ hyphenation = "0.6"
 [Docs.rs](https://docs.rs/hyphenation)
 
 
-## Quickstart
+## Usage
+
+### Quickstart
+
+The `hyphenation` library relies on hyphenation dictionaries, external files that must be loaded into memory. To start with, however, it can be more convenient to embed them in the compiled artifact.
+
+```toml
+[dependencies]
+hyphenation = { version = "0.7", features = "embed_all" }
+```
+
+The topmost module of `hyphenation` offers a small prelude that can be imported to expose the most common functionality.
 
 ```rust
-use hyphenation::{Hyphenation, Standard};
-use hyphenation::Language::{English_US};
+use hyphenation::*;
 
-// Load hyphenation data for American English from the pattern repository.
-let english_us = hyphenation::load(English_US).unwrap();
+// Retrieve the embedded American English dictionary for `Standard` hyphenation.
+let en_us = Standard::from_embedded(Language::EnglishUS) ?;
 
-// Compute the byte indices of valid hyphenation points within a word.
-let indices = "hyphenation".opportunities(&english_us);
-assert_eq!(indices, vec![2, 6]);
+// Identify valid breaks in the given word.
+let hyphenated = en_us.hyphenate("hyphenation");
 
-// Build an iterator that breaks a word according to standard hyphenation practices.
-let h: Standard = "hyphenation".hyphenate(&english_us);
+// Word breaks are represented as byte indices into the string.
+let break_indices = &hyphenated.breaks;
+assert_eq!(break_indices, &[2, 6]);
 
-// Collect the lazy hyphenator `h` into substring slices over the original string.
-let v: Vec<&str> = h.collect();
-assert_eq!(v, vec!["hy", "phen", "ation"]);
+// The segments of a hyphenated word can be iterated over.
+let segments = hyphenated.into_iter();
+let collected : Vec<String> = segments.collect();
+assert_eq!(collected, vec!["hy", "phen", "ation"]);
 
-
-// Hyphenation works with full text as well as individual words.
-use hyphenation::FullTextHyphenation;
-
-let text_indices = "Word hyphenation by computer.".fulltext_opportunities(&english_us);
-assert_eq!(text_indices, vec![7, 11, 23]);
-
-let h2: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&english_us);
-let v2: Vec<&str> = h2.collect();
-assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
-
-
-// Mark hyphenation opportunities with soft hyphens,
-// and render the result to a new String.
-let h3 = "anfractuous".hyphenate(&english_us);
-let s3: String = h3.punctuate().collect();
-assert_eq!(s3, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
+/// `hyphenate()` is case-insensitive.
+let uppercase : Vec<_> = en_us.hyphenate("CAPITAL").into_iter().collect();
+assert_eq!(uppercase, vec!["CAP", "I", "TAL"]);
 ```
 
 
-### Unicode Normalization
+### Loading dictionaries at runtime
 
-For preference, `hyphenation` should operate on strings in a known *normalization form*, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate. This is particularly important when working with non-ASCII languages that feature combining marks.
+The current set of available dictionaries amounts to ~7MB of data, the embedding of which is seldom desirable. Most applications should prefer to load individual dictionaries at runtime, like so:
 
-(Notably exempt from such concerns are `English_US` and `English_GB`, for which normalization is ordinarily inconsequential.)
+```rust
+let path_to_dict = "/path/to/en-us.bincode";
+let english_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
+```
 
-The normalization form expected by `hyphenation` is determined at build time. By default, `hyphenation` is compiled to work with strings in Normalization Form C; you may specify another form in your Cargo manifest, like so:
+Dictionaries bundled with `hyphenation` can be retrieved from the build folder under `target`, and packaged with the final application as desired.
+
+```bash
+$ find target -name "dictionaries"
+target/debug/build/hyphenation-33034db3e3b5f3ce/out/dictionaries
+```
+
+
+### Segmentation
+
+Dictionaries can be used in conjunction with text segmentation to hyphenate words within a text run. This short example uses the [`unicode-segmentation`](https://crates.io/crates/unicode-segmentation) crate for untailored Unicode segmentation.
+
+```rust
+use unicode_segmentation::UnicodeSegmentation;
+
+let hyphenate_text = |text : &str| -> String {
+    // Split the text on word boundaries—
+    text.split_word_bounds()
+        // —and hyphenate each word individually.
+        .flat_map(|word| en_us.hyphenate(word).into_iter())
+        .collect()
+};
+
+let excerpt = "I know noble accents / And lucid, inescapable rhythms; […]";
+assert_eq!("I know no-ble ac-cents / And lu-cid, in-escapable rhythms; […]"
+          , hyphenate_text(excerpt));
+```
+
+
+### Normalization
+
+Hyphenation patterns for languages affected by normalization generally cover multiple forms, at the discretion of their authors, but are not guaranteed to. If you require `hyphenation` to operate strictly on strings in a known normalization form, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate, you may specify it in your Cargo manifest, like so:
 
 ```toml
 [dependencies.hyphenation]
-version = "0.6.0"
-features = ["nfd"]
+version = "0.7.0"
+features = ["nfc"]
 ```
 
-The `features` field takes a list containing the desired normalization form; namely, the value of `features` must be *one* of the following:
+The `features` field may contain exactly *one* of the following normalization options:
 
-- `["none"]`, to use the [TeX UTF-8 patterns](http://www.ctan.org/tex-archive/language/hyph-utf8) as they are;
-- `["nfc"]`, for canonical composition;
-- `["nfd"]`, for canonical decomposition;
-- `["nfkc"]`, for compatibility composition;
-- `["nfkd"]`, for compatibility decomposition.
+- `"nfc"`, for canonical composition;
+- `"nfd"`, for canonical decomposition;
+- `"nfkc"`, for compatibility composition;
+- `"nfkd"`, for compatibility decomposition.
+
+It is recommended to build `hyphenation` in release mode if normalization is enabled, since the bundled hyphenation patterns will need to be reprocessed into dictionaries.
 
 
 ## License
 
 `hyphenation` © 2016 tapeinosyne, dual-licensed under the terms of either:
-  - The Apache License, Version 2.0
-  - The MIT license
+  - the Apache License, Version 2.0
+  - the MIT license
 
-`texhyphen` hyphenation patterns © their respective owners; see `lic.txt` files for licensing information.
+`texhyphen` and other hyphenation patterns © their respective owners; see `patterns/*.lic.txt` files for licensing information.
