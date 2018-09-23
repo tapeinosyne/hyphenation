@@ -1,56 +1,57 @@
 [package]
 name = "hyphenation"
-version = "0.6.1"
+version = "0.7.0"
 
-authors = ["ndr <ndr@qef.io>"]
+authors = ["Andrew <andrew@banausia.com>"]
 license = "Apache-2.0/MIT"
 repository = "https://github.com/tapeinosyne/hyphenation"
 homepage = "https://github.com/tapeinosyne/hyphenation"
 documentation = "https://docs.rs/hyphenation"
 
 readme = "README.md"
-description = "Standard Knuth-Liang hyphenation based on the TeX UTF-8 patterns."
+description = "Knuth-Liang hyphenation for a variety of languages"
 keywords = ["text", "typesetting"]
 
 
-include = ["**/*.rs", "**/Cargo.toml", "patterns-tex/*", "**/*.md", "LICENSE*"]
+include = ["**/*.rs", "**/Cargo.toml", "dictionaries/*", "patterns/*",
+           "README.md", "LICENSE*"]
 build = "build.rs"
 
 
 [features]
+embed_all = ["pocket-resources"]
+build_dictionaries = []
 
-# Normalization forms.
+# Unicode normalization.
 #
-# HEED: these features are mutually exclusive; only one may be passed to rustc/cargo as an argument. This restriction may be lifted in the future, should `hyphenation` benefit from operating on multiple forms at runtime.
-#
-# `build.rs` ensures – in rather haphazard fashion – that these multiple "features" effectively behave as a single parameter, i.e. as a closed set. Were the user to select more than one normalization form, the build will fail – alas, with an uninformative error message.
-
-nfc = []
-nfd = []
-nfkc = []
-nfkd = []
-none = []
-
-# The default is manually implemented by `build.rs`, since other features cannot disable it.
-# default = ["nfc"]
+# HEED: these features are mutually exclusive; only one may be passed to
+# rustc/cargo as an argument. `build.rs` ensures that these multiple "features"
+# effectively behave as a single, configurable parameter: were the user to
+# select more than one normalization form, the build will fail.
+nfc = ["unicode-normalization"]
+nfd = ["unicode-normalization"]
+nfkc = ["unicode-normalization"]
+nfkd = ["unicode-normalization"]
 
 
 [workspace]
 members = ["hyphenation_commons"]
 
 [dependencies]
-hyphenation_commons = { path = "hyphenation_commons", version = "0.6.1" }
-bincode = "0.6"
-fnv = "1.0"
-unicode-segmentation = "0.1"
+hyphenation_commons = { path = "hyphenation_commons", version = "0.7.0" }
+atlatl = { version = "0.1.1", features = ["serde"] }
+bincode = "1.0"
+serde = "1.0"
 
 [build-dependencies]
-hyphenation_commons = { path = "hyphenation_commons", version = "0.6.1" }
-bincode = "0.6"
-pocket-resources = "0.3"
-serde = "0.8"
-unicode-normalization = "0.1"
+hyphenation_commons = { path = "hyphenation_commons", version = "0.7.0" }
+atlatl = { version = "0.1.1", features = ["serde"] }
+bincode = "1.0"
+serde = "1.0"
+pocket-resources = { version  = "0.3", optional = true }
+unicode-normalization = { version  = "0.1", optional = true }
 
 [dev-dependencies]
-lazy_static = "0.2"
-quickcheck = "0.3"
+lazy_static = "1.1"
+quickcheck = "0.7"
+unicode-segmentation = "1.2"

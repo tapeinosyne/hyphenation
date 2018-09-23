@@ -1,34 +1,42 @@
-#[macro_use]
-extern crate lazy_static;
+#[macro_use] extern crate lazy_static;
 extern crate quickcheck;
+extern crate unicode_segmentation;
 
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufReader};
 use std::path::{Path};
 use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
+extern crate hyphenation_commons;
 use hyphenation::*;
+use hyphenation::extended::*;
+use hyphenation::Language::*;
 
 
-fn fiat_io(lang: Language) -> Corpus { load::language(lang).unwrap() }
+fn fiat_std(lang : Language) -> Standard {
+    let filename = format!("{}.standard.bincode", lang.code());
+    let file = File::open(Path::new("dictionaries").join(filename)).unwrap();
+    Standard::from_reader(lang, &mut BufReader::new(file)).unwrap()
+}
+
+fn fiat_ext(lang : Language) -> Extended {
+    let filename = format!("{}.extended.bincode", lang.code());
+    let file = File::open(Path::new("dictionaries").join(filename)).unwrap();
+    Extended::from_reader(lang, &mut BufReader::new(file)).unwrap()
+}
 
 lazy_static! {
-    static ref EN_US: Corpus = fiat_io(Language::English_US);
-
-    static ref WORDS: Vec<String> = {
-        let file = File::open(Path::new("/usr/share/dict/words")).unwrap();
-        let words: Vec<_> = BufReader::new(file).lines().map(|l| l.unwrap()).collect();
-
-        words
-    };
+    static ref EN_US : Standard = fiat_std(EnglishUS);
+    static ref HU : Extended = fiat_ext(Hungarian);
+    static ref TR : Standard = fiat_std(Turkish);
 }
 
 
 #[test]
 fn collected_equals_original() {
-    fn property(original: String) -> bool {
-        let collected: String = original.hyphenate(&EN_US).collect();
+    fn property(original : String) -> bool {
+        let collected : String = EN_US.hyphenate(&original).iter().segments().collect();
 
         collected == original
     }
@@ -38,42 +46,15 @@ fn collected_equals_original() {
 
 #[test]
 fn opportunities_within_bounds() {
-    fn property(s: String) -> bool {
-        let os = s.opportunities(&EN_US);
-        let l = s.len();
-
-        os.iter().all(|&i| i < l)
-    }
-
-    quickcheck(property as fn(String) -> bool);
-}
-
-#[test]
-fn punctuated_count() {
-    fn property(s: String) -> bool {
-        let l = s.chars().count();
-        let os = s.opportunities(&EN_US);
-        let h: String = s.hyphenate(&EN_US).punctuate().collect();
-
-        h.chars().count() == l + os.len()
-    }
-
-    quickcheck(property as fn(String) -> bool);
-}
-
-#[test]
-fn hyphenation_bounds() {
-    fn property(s: String) -> TestResult {
-        let ci: Vec<_> = s.char_indices().collect();
-        let (l_min, r_min) = (&EN_US.left_min, &EN_US.right_min);
+    fn property(s : String) -> TestResult {
+        let ci : Vec<_> = s.char_indices().collect();
+        let (l_min, r_min) = EnglishUS.minima();
         let s_len = ci.len();
-        if s_len < l_min + r_min {
-            return TestResult::discard();
-        }
+        if s_len < l_min + r_min { return TestResult::discard() }
 
-        let os = s.opportunities(&EN_US);
-        let ((l, _), (r, _)) = (ci[l_min - 1], ci[s_len - r_min]);
-        let within_bounds = |&i| i > l && i <= r;
+        let os : Vec<_> = EN_US.opportunities(&s);
+        let ((l, _), (r, _)) = (ci[l_min], ci[s_len - r_min]);
+        let within_bounds = |&i| i >= l && i <= r;
 
         TestResult::from_bool(os.iter().all(within_bounds))
     }
@@ -81,51 +62,115 @@ fn hyphenation_bounds() {
     quickcheck(property as fn(String) -> TestResult);
 }
 
+
 #[test]
-fn basics() {
-    let h1: Standard = "hyphenation".hyphenate(&EN_US);
-    let h2: Standard = "project".hyphenate(&EN_US);
-    let h3: Standard = "hypha".hyphenate(&EN_US);
-    let h4: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&EN_US);
+fn basics_standard() {
+    // Standard hyphenation
+    let w0 = "anfractuous";
+    let w1 = "hypha";        // minimum hyphenable length
+    // Exceptions
+    let ex0 = "hyphenation";
+    let ex1 = "bevies";     // unhyphenable (by exception)
 
-    assert_eq!(h1.size_hint(), (3, Some(3)));
-    assert_eq!(h2.size_hint(), (1, Some(1)));
-    assert_eq!(h3.size_hint(), (2, Some(2)));
-    assert_eq!(h4.size_hint(), (4, Some(4)));
+    let h_w0 = EN_US.hyphenate(w0);
+    let h_w1 = EN_US.hyphenate(w1);
+    let h_ex0 = EN_US.hyphenate(ex0);
+    let h_ex1 = EN_US.hyphenate(ex1);
 
-    let v1: Vec<&str> = h1.clone().collect();
-    let v2: Vec<&str> = h2.clone().collect();
-    let v3: Vec<&str> = h3.clone().collect();
-    let v4: Vec<&str> = h4.clone().collect();
-    assert_eq!(v1, vec!["hy", "phen", "ation"]);
-    assert_eq!(v2, vec!["project"]);
+    let seg0 = h_w0.iter().segments();
+    let seg1 = h_ex0.iter().segments();
+    let seg2 = h_ex1.iter().segments();
+    let seg3 = h_w1.iter().segments();
+
+    assert_eq!(seg0.size_hint(), (4, Some(4)));
+    assert_eq!(seg1.size_hint(), (4, Some(4)));
+    assert_eq!(seg2.size_hint(), (1, Some(1)));
+    assert_eq!(seg3.size_hint(), (2, Some(2)));
+
+    let v0 : Vec<&str> = seg0.clone().collect();
+    let v1 : Vec<&str> = seg1.clone().collect();
+    let v2 : Vec<&str> = seg2.clone().collect();
+    let v3 : Vec<&str> = seg3.clone().collect();
+
+    assert_eq!(v0, vec!["an", "frac", "tu", "ous"]);
+    assert_eq!(v1, vec!["hy", "phen", "a", "tion"]);
+    assert_eq!(v2, vec!["bevies"]);
     assert_eq!(v3, vec!["hy", "pha"]);
-    assert_eq!(v4, vec!["Word hy", "phen", "ation by com", "puter."]);
 
-    let ex1: Standard = "retribution".hyphenate(&EN_US);
-    let v_ex1: Vec<&str> = ex1.clone().collect();
-    assert_eq!(v_ex1, vec!["ret", "ri", "bu", "tion"]);
+    // Additional size checks for partially consumed iterators.
+    let mut seg2 = seg2;
+    seg2.next();
+    assert_eq!(seg2.size_hint(), (0, Some(0)));
+    seg2.next();
+    assert_eq!(seg2.size_hint(), (0, Some(0)));
 
-    let s1: String = h1.punctuate().collect();
-    assert_eq!(s1, "hy\u{ad}phen\u{ad}ation".to_owned());
-
-    // And some further size_hint sanity checking for partially consumed iterators.
-    let mut h2 = h2;
-    h2.next();
-    assert_eq!(h2.size_hint(), (0, Some(0)));
-    h2.next();
-    assert_eq!(h2.size_hint(), (0, Some(0)));
-
-    let mut h3 = h3;
-    h3.next();
-    assert_eq!(h3.size_hint(), (1, Some(1)));
-    h3.next();
-    assert_eq!(h3.size_hint(), (0, Some(0)));
+    let mut seg3 = seg3;
+    seg3.next();
+    assert_eq!(seg3.size_hint(), (1, Some(1)));
+    seg3.next();
+    assert_eq!(seg3.size_hint(), (0, Some(0)));
 }
 
 #[test]
-fn known_inaccuracies() {
-    let example1: Vec<&str> = "chionididae".hyphenate(&EN_US).collect();
+fn basics_extended() {
+    let w0 = "asszonnyal";
+    let w1 = "esszé";
 
-    assert_ne!(example1, vec!["chi", "o", "nid", "i", "dae"]);
+    let v0 : Vec<_> = HU.hyphenate(w0).into_iter().segments().collect();
+    let v1 : Vec<_> = HU.hyphenate(w1).into_iter().segments().collect();
+
+    assert_eq!(v0, vec!["asz", "szony", "nyal"]);
+    assert_eq!(v1, vec!["esz", "szé"]);
+}
+
+#[test]
+fn special_casing() {
+    let w0 = "İbrahim";
+    let v0 : Vec<_> = TR.hyphenate(&w0).into_iter().segments().collect();
+    assert_eq!(v0, vec!["İb", "ra", "him"]);
+
+    let w1 = "İLGİNÇ";
+    let v1 : Vec<_> = TR.hyphenate(w1).into_iter().segments().collect();
+    assert_eq!(v1, vec!["İL", "GİNÇ"]);
+
+    let w2 = "MİCRO";
+    let v2 : Vec<_> = EN_US.hyphenate(w2).into_iter().segments().collect();
+    assert_eq!(v2, vec!["Mİ", "CRO"]);
+
+    let w4 = "İDİOM";
+    let v4 : Vec<_> = EN_US.hyphenate(w4).into_iter().segments().collect();
+    assert_eq!(v4, vec!["İD", "İOM"]);
+
+    let w3 = "MUCİLAGİNOUS";
+    let v3 : Vec<_> = EN_US.hyphenate(w3).into_iter().segments().collect();
+    assert_eq!(v3, vec!["MU", "CİLAGİ", "NOUS"]);
+}
+
+#[test]
+fn language_mismatch_on_load() {
+    let file = File::open("./dictionaries/mul-ethi.standard.bincode").unwrap();
+    let mut reader = BufReader::new(file);
+    assert!(Standard::from_reader(EnglishUS, &mut reader).is_err());
+}
+
+#[test]
+fn text() {
+    use unicode_segmentation::UnicodeSegmentation;
+
+    let hyphenate_text = |text : &str | -> String {
+        text.split_word_bounds()
+            .flat_map(|word| EN_US.hyphenate(word).into_iter())
+            .collect()
+    };
+
+    let t0 = "I know noble accents / And lucid, inescapable rhythms; […]";
+    let expect0 = "I know no-ble ac-cents / And lu-cid, in-escapable rhythms; […]";
+    let seg0 = hyphenate_text(t0);
+    assert_eq!(seg0, expect0);
+
+    let t1 = "ever-burning sulphur unconsumed";
+    let expect1 = "ever-burn-ing sul-phur un-con-sumed";
+    let seg1 = hyphenate_text(t1);
+    assert_eq!(seg1, expect1);
+
 }

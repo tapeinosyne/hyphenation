@@ -1,152 +1,205 @@
-//! Hyphenating iterators.
+/*!
+Methods for hyphenation dictionaries
+*/
 
-use unicode_segmentation::UnicodeSegmentation;
+use std::borrow::Cow;
 
-use hyphenation_commons::KLPTrie;
-use language::{Corpus};
-use utilia::{Interspersable, Intersperse};
+use hyphenation_commons::dictionary::{*, extended::*};
+use case_folding::{realign, refold, Shift};
+use score::Score;
 
 
-pub trait Hyphenation<Hyphenator> where Hyphenator : Iterator {
-    /// Returns the indices of valid hyphenation points within the given word.
-    fn opportunities(self, corp: &Corpus) -> Vec<usize>;
-
-    /// Returns an iterator over orthographic syllables of the given word,
-    /// separated by valid hyphenation points.
-    ///
-    /// Note that, in some orthographies, the syllables of a hyphenated
-    /// word are not necessarily substrings of the original word.
-    fn hyphenate(self, corp: &Corpus) -> Hyphenator;
-}
-
-pub trait FullTextHyphenation<Hyphenator> : Hyphenation<Hyphenator>
-    where Hyphenator : Iterator {
-    /// Returns the indices of valid hyphenation points within the given text.
-    fn fulltext_opportunities(self, corp: &Corpus) -> Vec<usize>;
-
-    /// Returns an iterator over segments of the given text, separated by
-    /// valid hyphenation points.
-    fn fulltext_hyphenate(self, corp: &Corpus) -> Hyphenator;
+/// The indices of soft hyphens (U+00AD) within the string, if any. Existing
+/// soft hyphens indicate a preferred hyphenation, which can be used without
+/// resorting to best-effort hyphenation.
+pub fn soft_hyphen_indices(word : &str) -> Option<Vec<usize>> {
+    let shys : Vec<_> = word.match_indices('\u{00ad}').map(|(i, _)| i).collect();
+    if shys.len() > 0 {
+        Some(shys)
+    } else { None }
 }
 
 
-/// The `Standard` hyphenator iterates over a string, returning slices
-/// delimited by string boundaries and valid hyphenation points.
+/// A hyphenated word carrying valid breaks.
 ///
-/// For individual words, such slices coincide with orthographic syllables.
-#[derive(Clone, Debug)]
-pub struct Standard<'a> {
-    text: &'a str,
-    opportunities: Vec<usize>,
-    prior: usize,
-    current: usize
-}
-
-impl<'a> Standard<'a> {
-    /// Inserts a soft hyphen at hyphenation points.
-    pub fn punctuate(self) -> Intersperse<Self> {
-        self.intersperse("\u{ad}")
-    }
-
-    /// Inserts a given string at hyphenation points.
-    pub fn punctuate_with(self, mark: &'a str) -> Intersperse<Self> {
-        self.intersperse(mark)
-    }
+/// The `Word` can be borrowed or moved for iteration with `iter()` and
+/// `into_iter()` respectively.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Word<'t, Break> {
+    pub text : &'t str,
+    pub breaks : Vec<Break>
 }
 
 
-impl<'a> Iterator for Standard<'a> {
-    type Item = &'a str;
+/// A dictionary capable of hyphenating individual words.
+///
+/// For the purpose of hyphenation, a "word" should not be a compound in
+/// hyphenated form (such as "hard-nosed"), but a single run of letters
+/// without intervening punctuation or spaces.
+///
+/// For details, refer to the `patterns/*.chr.txt` file for each language.
+pub trait Hyphenator<'h> {
+    /// Plain representation of a word break.
+    type Opportunity;
 
-    fn next(&mut self) -> Option<&'a str> {
-        let start = self.prior;
-        let current = self.current;
+    /// An owned opportunity used to specify and store the predetermined hyphenation
+    /// of known words.
+    type Exact;
 
-        match self.opportunities.get(current) {
-            Some(&end) => {
-                self.prior = end;
-                self.current = current + 1;
-                Some(&self.text[start .. end])
-            },
-            None => {
-                if current <= self.opportunities.len() {
-                    self.current = current + 1;
-                    Some(&self.text[start ..])
-                } else {
-                    None
+
+    /// Hyphenate a word, computing appropriate word breaks and preparing it for
+    /// iteration.
+    ///
+    /// Soft hyphens take priority over dictionary hyphenation; if the word
+    /// contains any, they will be returned as the only breaks available.
+    ///
+    /// This method is case-insensitive.
+    fn hyphenate<'t>(&'h self, word : &'t str) -> Word<'t, Self::Opportunity>;
+
+    /// The hyphenation opportunities that our dictionary can find in the given
+    /// word. The word should be lowercase.
+    fn opportunities(&'h self, lowercase_word : &str) -> Vec<Self::Opportunity> {
+        match self.boundaries(lowercase_word) {
+            None => vec![],
+            Some(mins) => {
+                match self.exact(lowercase_word) {
+                    None => self.opportunities_within(lowercase_word, mins),
+                    Some(known) => known
                 }
             }
         }
     }
 
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.opportunities.len() + 1 - self.current;
-        (remaining, Some(remaining))
-    }
-}
+    /// The hyphenation opportunities that arise between the specified indices.
+    ///
+    /// No attempt is made to retrieve a known exact hyphenation.
+    fn opportunities_within(&'h self, lowercase_word : &str, bounds : (usize, usize))
+        -> Vec<Self::Opportunity>;
 
-impl<'a> ExactSizeIterator for Standard<'a> {}
+    /// Retrieve the known exact hyphenation for this word, if any.
+    fn exact(&'h self, lowercase_word : &str) -> Option<Vec<Self::Opportunity>>;
 
+    /// Specify the hyphenation of the given word with an exact sequence of
+    /// opportunities. Subsequent calls to `hyphenate` or `opportunities` will
+    /// yield this hyphenation instead of generating one from patterns.
+    ///
+    /// If the word already has an exact hyphenation, the old opportunities
+    /// are returned.
+    fn add_exact(&mut self, word : String, ops : Vec<Self::Exact>) -> Option<Vec<Self::Exact>>;
 
-impl<'a> Hyphenation<Standard<'a>> for &'a str {
-    /// Returns the byte indices of valid hyphenation points within the string.
-    fn opportunities(self, corp: &Corpus) -> Vec<usize> {
-        let (l_min, r_min) = (corp.left_min, corp.right_min);
+    /// The number of `char`s from the start and end of a word where breaks may
+    /// not occur.
+    fn unbreakable_chars(&self) -> (usize, usize);
+
+    /// The byte indices delimiting the substring where breaks may occur, unless
+    /// the word is too short to be hyphenated.
+    fn boundaries(&self, word : &str) -> Option<(usize, usize)> {
+        let (l_min, r_min) = self.unbreakable_chars();
         let length_min = l_min + r_min;
-
-        if self.chars().count() < length_min {
-            return vec![];
-        }
-
-        match corp.exceptions.score(self) {
-            Some(known_score) => known_score.clone(),
-            None => {
-                let score = corp.patterns.score(self);
-                let cis = self.char_indices();
-                let (l, r) = (cis.clone().skip(l_min).next().unwrap().0,
-                              cis.rev().skip(r_min.saturating_sub(2)).next().unwrap().0);
-
-                self.bytes()
-                    .enumerate().skip(1)
-                    .zip(&score)
-                    .filter(|&((i, _), p)|
-                        p % 2 != 0
-                        && i >= l && i < r
-                        && self.is_char_boundary(i))
-                    .map(|((i, _), _)| i)
-                    .collect()
-            }
-        }
-    }
-
-    /// Returns an iterator over string slices separated by valid hyphenation
-    /// points.
-    fn hyphenate(self, corp: &Corpus) -> Standard<'a> {
-        Standard {
-            text: self,
-            opportunities: self.opportunities(corp),
-            prior: 0,
-            current: 0
-        }
+        if word.chars().count() >= length_min {
+            ( word.char_indices().nth(l_min).unwrap().0
+            , word.char_indices().rev().nth(r_min.saturating_sub(1)).unwrap().0 ).into()
+        } else { None }
     }
 }
 
-impl<'a> FullTextHyphenation<Standard<'a>> for &'a str {
-    fn fulltext_opportunities(self, corp: &Corpus) -> Vec<usize> {
-        let by_word = self.split_word_bound_indices();
 
-        by_word.flat_map(|(i, word)| {
-            word.opportunities(corp).into_iter().map(move |i1| i + i1)
-        }).collect()
+#[derive(Debug, Clone)]
+struct Prepared<'t> {
+    word : Cow<'t, str>,
+    shifts : Vec<Shift>
+}
+
+fn prepare<'t>(text : &'t str) -> Prepared<'t> {
+    let (word, shifts) = refold(text);
+    Prepared { word, shifts }
+}
+
+
+impl<'h> Hyphenator<'h> for Standard {
+    type Opportunity = usize;
+    type Exact = usize;
+
+    fn hyphenate<'t>(&'h self, word : &'t str) -> Word<'t, Self::Opportunity> {
+        let breaks = match soft_hyphen_indices(word) {
+            Some(ops) => ops,
+            None => {
+                let Prepared { ref word, ref shifts } = prepare(word);
+                if shifts.len() > 0 {
+                    self.opportunities(word).into_iter()
+                        .map(move |o| realign(o, shifts)).collect()
+                } else { self.opportunities(word) }
+            }
+        };
+
+        Word { breaks, text : word }
     }
 
-    fn fulltext_hyphenate(self, corp: &Corpus) -> Standard<'a> {
-        Standard {
-            text: self,
-            opportunities: self.fulltext_opportunities(corp),
-            prior: 0,
-            current: 0
-        }
-
+    fn opportunities_within(&'h self, word : &str, (l, r) : (usize, usize)) -> Vec<usize> {
+        (1 .. word.len())
+            .zip(self.score(word))
+            .filter(|&(i, v)| {
+                let valid = Self::denotes_opportunity(v);
+                let within_bounds = i >= l && i <= r;
+                let legal_index = word.is_char_boundary(i);
+                valid && within_bounds && legal_index
+            }).map(|(i, _)| i).collect()
     }
+
+    #[inline]
+    fn exact(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
+        self.exceptions.0.get(w).cloned()
+    }
+
+    #[inline]
+    fn add_exact(&mut self, w : String, ops : Vec<usize>) -> Option<Vec<usize>> {
+        self.exceptions.0.insert(w, ops)
+    }
+
+    #[inline] fn unbreakable_chars(&self) -> (usize, usize) { self.minima }
+}
+
+impl<'h> Hyphenator<'h> for Extended {
+    type Opportunity = (usize, Option<&'h Subregion>);
+    type Exact = (usize, Option<Subregion>);
+
+    fn hyphenate<'t>(&'h self, word : &'t str) -> Word<'t, Self::Opportunity> {
+        let breaks = match soft_hyphen_indices(word) {
+            Some(ops) => ops.into_iter().map(|i| (i, None)).collect(),
+            None => {
+                let Prepared { ref word, ref shifts } = prepare(word);
+                if shifts.len() > 0 {
+                    self.opportunities(word).into_iter()
+                        .map(move |(i, subr)| (realign(i, shifts), subr)).collect()
+                } else { self.opportunities(word) }
+            }
+        };
+
+        Word { breaks, text : word }
+    }
+
+    fn opportunities_within(&'h self, word : &str, (l, r) : (usize, usize))
+        -> Vec<Self::Opportunity>
+    {
+        (1 .. word.len())
+            .zip(self.score(word))
+            .filter(|&(i, v)| {
+                let valid = Self::denotes_opportunity(v);
+                let within_bounds = i >= l && i <= r;
+                let legal_index = word.is_char_boundary(i);
+                valid && within_bounds && legal_index
+            }).map(|(i, (_, subr))| (i, subr)).collect()
+    }
+
+    #[inline]
+    fn exact(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
+        self.exceptions.0.get(w).map(|v| v.iter().map(|&(i, ref sub)| (i, sub.as_ref())).collect())
+    }
+
+    #[inline]
+    fn add_exact(&mut self, w : String, ops : Vec<Self::Exact>) -> Option<Vec<Self::Exact>> {
+        self.exceptions.0.insert(w, ops)
+    }
+
+    #[inline] fn unbreakable_chars(&self) -> (usize, usize) { self.minima }
 }

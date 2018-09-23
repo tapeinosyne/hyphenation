@@ -1,107 +1,105 @@
-// Forsaken docs justly quibble the vexed programmer's waning zeal
-//! Text hyphenation in a variety of languages.
-//!
-//!
-//! ## Usage
-//!
-//! A typical import comprises the `Hyphenation` trait, the `Standard`
-//! hyphenator, and the `Language` enum. This exposes the crate's core
-//! functionality, and the set of available languages.
-//!
-//! ```ignore
-//! extern crate hyphenation;
-//
-//! use hyphenation::{Hyphenation, Standard, Language};
-//! ```
-//!
-//! To begin with, we must initiate the `Corpus` for our working language.
-//!
-//! ```ignore
-//! let english_us = hyphenation::load(Language::English_US).unwrap();
-//! ```
-//!
-//! Our English `Corpus` can now be used by `Hyphenation` methods.
-//! Core functionality is provided by `opportunities()`, which returns the
-//! byte indices of valid hyphenation points within a word.
-//!
-//! ```ignore
-//! let indices = "hyphenation".opportunities(&english_us);
-//! assert_eq!(indices, vec![2, 6]);
-//! ```
-//!
-//! The same `Corpus` may also be used by *hyphenators*: iterators which
-//! segment words in accordance with hyphenation practices, as described
-//! by the corpus.
-//!
-//! The simplest (and, presently, only) hyphenator is `Standard`:
-//!
-//! ```ignore
-//! let h: Standard = "hyphenation".hyphenate(&english_us);
-//! ```
-//!
-//! The `Standard` hyphenator does not allocate new strings, returning
-//! slices instead.
-//!
-//! ```ignore
-//! let v: Vec<&str> = h.collect();
-//! assert_eq!(v, vec!["hy", "phen", "ation"]);
-//! ```
-//!
-//! An hyphenator always knows its exact length, which means that we can
-//! retrieve the number of remaining word segments with `.len()`.
-//!
-//! ```ignore
-//! let mut iter = "hyphenation".hyphenate(&english_us);
-//! assert_eq!(iter.len(), 3);
-//! iter.next();
-//! assert_eq!(iter.len(), 2);
-//! ```
-//!
-//!
-//! ## Full-text Hyphenation
-//!
-//! While hyphenation is always performed on a per-word basis, convenience
-//! calls for a subtrait to provide methods to work with full text.
-//!
-//! ```ignore
-//! use hyphenation::{FullTextHyphenation};
-//!
-//! let h2: Standard = "Word hyphenation by computer.".fulltext_hyphenate(&english_us);
-//! let v2: Vec<&str> = h2.collect();
-//! assert_eq!(v2, vec!["Word hy", "phen", "ation by com", "puter."]);
-//! ```
-//!
-//! Hyphenators also expose some simple methods to render hyphenated text:
-//! `punctuate()` and `punctuate_with(string)`, which mark hyphenation
-//! opportunities respectively with soft hyphens (Unicode `U+00AD SOFT HYPHEN`)
-//! and any given `string`.
-//!
-//! ```ignore
-//! let h3 = "anfractuous".hyphenate(&english_us);
-//! let s3: String = h2.clone().punctuate().collect();
-//! assert_eq!(s3, "an\u{ad}frac\u{ad}tu\u{ad}ous".to_owned());
-//!
-//! let s4: String = h2.punctuate_with("‧").collect()
-//! assert_eq!(s4, "an‧frac‧tu‧ous".to_owned());
-//! ```
+/*! A library for the hyphenation of UTF-8 strings
 
+## Usage
+
+A typical import comprises the [`Hyphenator`] trait, the [`Standard`]
+dictionary type, and the [`Language`] enum. This exposes the crate's core
+functionality, as well as the set of available languages.
+
+```ignore
+extern crate hyphenation;
+
+use hyphenation::{Hyphenator, Standard, Language};
+```
+
+To begin with, we must initiate the hyphenation dictionary for our working
+language. Dictionaries come bundled with the `hyphenation` crate, but they
+must still be loaded into memory. The most convenient way to do so is the
+[`Load`] trait.
+
+```ignore
+use hyphenation::Load;
+
+let path_to_dict = "/path/to/english-dictionary.bincode";
+let en_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
+```
+
+Our English dictionary can now be used as a [`Hyphenator`].
+
+
+### Hyphenators
+
+As the primary interface of this library, hyphenators take care of seeking
+out opportunities for hyphenation within individual words.
+
+```ignore
+let hyphenated = en_us.hyphenate("anfractuous");
+```
+
+The [`hyphenate`] method computes the indices of valid word breaks and wraps
+them in a a small intermediate structure that can be further used to [iterate]
+over word segments.
+
+```ignore
+let breaks = &hyphenated.breaks;
+assert_eq!(breaks, &[2, 6, 8]);
+
+let hyphenated_segments : Vec<&str>= hyphenated.iter().collect()
+assert_eq!(hyphenated_segments, &["an-", "frac-", "tu-", "ous"]);
+```
+
+Both the [`Standard`] and [`Extended`] hyphenators are case-insensitive and
+prioritize existing soft hyphens (U+00AD) over dictionary hyphenation.
+
+```ignore
+let word = "ribonuclease";
+let word_shy = "ri\u{00ad}bo\u{00ad}nu\u{00ad}cle\u{00ad}ase";
+
+let by_dictionary : Vec<&str> = en_us.hyphenate(word).into_iter().segments().collect();
+let by_shy : Vec<&str> = en_us.hyphenate(word_shy).into_iter().segments().collect();
+
+assert_eq!(by_dictionary, vec!["ri", "bonu", "cle", "ase"]);
+assert_eq!(by_shy, vec!["ri", "\u{00ad}bo", "\u{00ad}nu", "\u{00ad}cle", "\u{00ad}ase"]);
+assert_ne!(by_dictionary, by_shy);
+```
+
+
+## Identifying "words"
+
+Knuth–Liang hyphenation operates at the level of individual words, but there
+can be ambiguity as to what constitutes a *word*. All hyphenation dictionaries
+handle the expected set of word-forming graphemes from their respective
+alphabets, but some also accept punctuation marks such as hyphens and
+apostrophes, and are thus capable of handling hyphen-joined compound words or
+elisions. Even so, it's generally preferable to handle punctuation at the
+level of segmentation, as it affords greater control over the final result
+(such as where to break hyphen-joined compounds, or whether to set a leading
+hyphen on new lines).
+
+
+[`Hyphenator`]: hyphenator/trait.Hyphenator.html
+[`Standard`]: struct.Standard.html
+[`Language`]: enum.Language.html
+[`Load`]: load/trait.Load.html
+[`hyphenate`]: hyphenator/trait.Hyphenator#tymethod.hyphenate.html
+[iterate]: iter/struct.Hyphenating.html
+[`Extended`]: extended/struct.Extended.html
+*/
+
+extern crate atlatl;
 extern crate bincode;
-extern crate fnv;
 extern crate hyphenation_commons;
-extern crate unicode_segmentation;
 
-mod resources;
-mod utilia;
+
+#[cfg(feature = "embed_all")] mod resources;
+mod case_folding;
 pub mod hyphenator;
-pub mod language;
+pub mod extended;
+pub mod iter;
 pub mod load;
+pub mod score;
 
-pub use hyphenation_commons::{KLPair, KLPTrie, Exceptions, Patterns};
-pub use hyphenator::{Hyphenation, FullTextHyphenation, Standard};
-pub use language::{Language, Corpus};
-
-// Note: the name "load" is misleading, as we are merely accessing embedded tries.
-// However, future versions of `hyphenation` should support both embedding
-// and runtime loading of pattern data, with loading being the default;
-// anticipating such changes, we keep `load` as a public export.
-pub use load::{language as load};
+pub use hyphenation_commons::{Language, dictionary::Standard};
+pub use hyphenator::Hyphenator;
+pub use iter::Iter;
+pub use load::Load;
