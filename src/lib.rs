@@ -99,7 +99,8 @@ pub mod iter;
 pub mod load;
 pub mod score;
 
-pub use hyphenation_commons::{Language, dictionary::Standard};
+pub use hyphenation_commons::Language;
+pub use hyphenation_commons::dictionary::Standard;
 pub use hyphenator::Hyphenator;
 pub use iter::Iter;
 pub use load::Load;

@@ -4,7 +4,8 @@ Methods for hyphenation dictionaries
 
 use std::borrow::Cow;
 
-use hyphenation_commons::dictionary::{*, extended::*};
+use hyphenation_commons::dictionary::*;
+use hyphenation_commons::dictionary::extended::*;
 use case_folding::{realign, refold, Shift};
 use score::Score;
 

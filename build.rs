@@ -25,7 +25,8 @@ use std::path::{Path, PathBuf};
 
 use hyphenation_commons::dictionary::*;
 use hyphenation_commons::dictionary::extended as ext;
-use hyphenation_commons::Language::{self, *};
+use hyphenation_commons::Language;
+use hyphenation_commons::Language::*;
 use hyphenation_commons::parse::*;
 
 
