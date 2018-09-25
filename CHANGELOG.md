@@ -1,5 +1,10 @@
 # `hyphenation`
 
+## 0.7.1
+
+- Backward compatibility with Rust 1.21.0 and earlier.
+- Downstream dependency: `num-traits` 0.1 → 0.2
+
 
 ## 0.7.0
 
