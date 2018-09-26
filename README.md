@@ -25,7 +25,7 @@ The `hyphenation` library relies on hyphenation dictionaries, external files tha
 
 ```toml
 [dependencies]
-hyphenation = { version = "0.7.1", features = "embed_all" }
+hyphenation = { version = "0.7.1", features = ["embed_all"] }
 ```
 
 The topmost module of `hyphenation` offers a small prelude that can be imported to expose the most common functionality.
