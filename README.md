@@ -94,7 +94,7 @@ assert_eq!("I know no-ble ac-cents / And lu-cid, in-escapable rhythms; […]"
 
 ### Normalization
 
-Hyphenation patterns for languages affected by normalization generally cover multiple forms, at the discretion of their authors, but are not guaranteed to. If you require `hyphenation` to operate strictly on strings in a known normalization form, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate, you may specify it in your Cargo manifest, like so:
+Hyphenation patterns for languages affected by normalization occasionally cover multiple forms, at the discretion of their authors, but most often they don’t. If you require `hyphenation` to operate strictly on strings in a known normalization form, as described by the [Unicode Standard Annex #15](http://unicode.org/reports/tr15/) and provided by the [`unicode-normalization`](https://github.com/unicode-rs/unicode-normalization) crate, you may specify it in your Cargo manifest, like so:
 
 ```toml
 [dependencies.hyphenation]
