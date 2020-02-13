@@ -157,12 +157,11 @@ pub enum Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
-            Error::Deserialization(ref e) => e.description(),
-            Error::IO(ref e) => e.description(),
-            Error::LanguageMismatch { .. } => "loaded a dictionary for the wrong language",
-            Error::Resource => "embedded dictionary could not be retrieved"
+            Error::Deserialization(ref e) => Some(e),
+            Error::IO(ref e) => Some(e),
+            _ => None
         }
     }
 }
@@ -176,10 +175,7 @@ impl fmt::Display for Error {
                 write!(f, "\
 Language mismatch: attempted to load a dictionary for `{}`, but found
 a dictionary for `{}` instead.", expected, found),
-            Error::Resource => {
-                let e = self as &error::Error;
-                e.description().fmt(f)
-            }
+            Error::Resource => f.write_str("the embedded dictionary could not be retrieved")
         }
     }
 }

@@ -283,13 +283,13 @@ pub enum Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match *self {
-            Error::Build(ref e) => e.description(),
-            Error::Env(ref e) => e.description(),
-            Error::IO(ref e) => e.description(),
-            Error::Serialization(ref e) => e.description(),
-            Error::Resource => "pattern resource creation failed"
+            Error::Build(ref e) => Some(e),
+            Error::Env(ref e) => Some(e),
+            Error::IO(ref e) => Some(e),
+            Error::Serialization(ref e) => Some(e),
+            _ => None,
         }
     }
 }
@@ -301,10 +301,7 @@ impl fmt::Display for Error {
             Error::Env(ref e) => e.fmt(f),
             Error::IO(ref e) => e.fmt(f),
             Error::Serialization(ref e) => e.fmt(f),
-            Error::Resource => {
-                let e = self as &error::Error;
-                e.description().fmt(f)
-            }
+            Error::Resource => f.write_str("dictionary could not be embedded")
         }
     }
 }
