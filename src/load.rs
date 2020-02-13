@@ -76,7 +76,7 @@ use hyphenation_commons::dictionary::{Standard, extended::Extended};
 /// Convenience methods for the retrieval of hyphenation dictionaries.
 pub trait Load : Sized {
     /// Read and deserialize the dictionary at the given path, verifying that it
-    /// effectively belongs to the requested language.
+    /// belongs to the expected language.
     fn from_path<P>(lang : Language, path : P) -> Result<Self>
     where P : AsRef<Path> {
         let file = File::open(path) ?;
@@ -84,7 +84,7 @@ pub trait Load : Sized {
     }
 
     /// Deserialize a dictionary from the provided reader, verifying that it
-    /// effectively belongs to the requested language.
+    /// belongs to the expected language.
     fn from_reader<R>(lang : Language, reader : &mut R) -> Result<Self>
     where R : io::Read;
 
@@ -93,7 +93,7 @@ pub trait Load : Sized {
     where R : io::Read;
 
     #[cfg(feature = "embed_all")]
-    /// Deserialize the embedded dictionary.
+    /// Deserialize the embedded dictionary for the given language.
     fn from_embedded(lang : Language) -> Result<Self>;
 
 }
