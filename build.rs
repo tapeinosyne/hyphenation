@@ -4,12 +4,12 @@
 extern crate unicode_normalization;
 #[cfg(feature = "embed_all")] extern crate pocket_resources;
 
-extern crate atlatl;
 extern crate bincode;
+extern crate fst;
 extern crate hyphenation_commons;
 extern crate serde;
 
-use atlatl::fst;
+use fst::Map;
 use bincode as bin;
 use serde::ser;
 use std::collections::HashMap;
@@ -24,6 +24,7 @@ use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 
 use hyphenation_commons::dictionary::*;
+use hyphenation_commons::dictionary::trie::Trie;
 use hyphenation_commons::dictionary::extended as ext;
 use hyphenation_commons::Language;
 use hyphenation_commons::Language::*;
@@ -60,7 +61,7 @@ trait TryFromIterator<Tally> : Sized {
             + ExactSizeIterator;
 }
 
-fn uniques<I, T>(iter : I) -> (Vec<(String, u16)>, Vec<T>)
+fn uniques<I, T>(iter : I) -> (Vec<(String, u64)>, Vec<T>)
 where T : Eq + Clone + Hash
     , I : IntoIterator<Item = (String, T)>
         + ExactSizeIterator
@@ -72,7 +73,7 @@ where T : Eq + Clone + Hash
         match tally_ids.get(&tally) {
             Some(&id) => pairs.push((pattern, id)),
             None => {
-                let id = tallies.len() as u16;
+                let id = tallies.len() as u64;
                 tallies.push(tally.clone());
                 tally_ids.insert(tally, id);
                 pairs.push((pattern, id));
@@ -90,12 +91,9 @@ impl TryFromIterator<<Patterns as Parse>::Tally> for Patterns {
             + ExactSizeIterator
     {
         let (kvs, tallies) = uniques(iter);
-        let builder = fst::Builder::from_iter(kvs.into_iter()) ?;
-        let automaton : fst::FST<u32, u16> = fst::FST::from_builder(&builder) ?;
-        Ok(Patterns {
-            tallies : tallies,
-            automaton : automaton
-        })
+        let map = Map::from_iter(kvs.into_iter()) ?;
+        let automaton = Trie(map);
+        Ok(Patterns { tallies, automaton })
     }
 }
 
@@ -114,12 +112,9 @@ impl TryFromIterator<<ext::Patterns as Parse>::Tally> for ext::Patterns {
             + ExactSizeIterator
     {
         let (kvs, tallies) = uniques(iter);
-        let builder = fst::Builder::from_iter(kvs.into_iter()) ?;
-        let automaton : fst::FST<u32, u16> = fst::FST::from_builder(&builder) ?;
-        Ok(ext::Patterns {
-            tallies : tallies,
-            automaton : automaton
-        })
+        let map = Map::from_iter(kvs.into_iter()) ?;
+        let automaton = Trie(map);
+        Ok(ext::Patterns { tallies, automaton })
     }
 }
 
@@ -259,7 +254,7 @@ fn main() {
         println!("Building `Extended` dictionaries:");
         for &language in ext_langs.iter() {
             println!("  - {:?}", language);
-            let dict = Extended {
+            let dict = ext::Extended {
                 language,
                 patterns : ext::Patterns::build(language, &paths).unwrap(),
                 exceptions : ext::Exceptions::default(),

@@ -86,7 +86,7 @@ hyphen on new lines).
 [`Extended`]: extended/struct.Extended.html
 */
 
-extern crate atlatl;
+extern crate fst;
 extern crate bincode;
 extern crate hyphenation_commons;
 

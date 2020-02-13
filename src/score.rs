@@ -71,9 +71,10 @@ impl<'d> Score<'d> for Standard {
         let fst = &self.patterns.automaton;
         let tallies = &self.patterns.tallies;
         for i in 0 .. match_str.len() - 1 {
-            let substring = &match_str.as_bytes()[i ..];
-            for (_, tally_id) in fst.reap(substring) {
-                let tally = &tallies[tally_id as usize];
+            let substring = &match_str.as_bytes()[i..];
+            let matches = fst.get_prefixes(substring);
+            for tally_id in matches {
+                let tally = &tallies[tally_id];
                 for &Locus { index, value } in tally {
                     let k = i + index as usize;
                     if k > 1 && k <= hyphenable_length && value > values[k - 2] {
@@ -102,8 +103,9 @@ impl<'d> Score<'d> for Extended {
         let tallies = &self.patterns.tallies;
         for i in 0 .. match_str.len() - 1 {
             let substring = &match_str.as_bytes()[i ..];
-            for (_, tally_id) in fst.reap_past_root(substring) {
-                let tally = &tallies[tally_id as usize];
+            let matches = fst.get_prefixes(substring);
+            for tally_id in matches {
+                let tally = &tallies[tally_id];
                 // NOTE: By convention, competing standard and non-standard patterns
                 // may not assign equal values to the same location.
                 for &(Locus { index, value }, ref r) in tally.subregion.iter() {

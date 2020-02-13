@@ -70,7 +70,7 @@ use std::path::Path;
 use std::result;
 
 use hyphenation_commons::Language;
-use hyphenation_commons::dictionary::{Standard, Extended};
+use hyphenation_commons::dictionary::{Standard, extended::Extended};
 
 
 /// Convenience methods for the retrieval of hyphenation dictionaries.

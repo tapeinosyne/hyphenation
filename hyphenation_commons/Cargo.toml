@@ -11,5 +11,5 @@ documentation = "https://docs.rs/hyphenation"
 description = "Proemial code for the `hyphenation` library"
 
 [dependencies]
+fst = "0.3"
 serde = { version = "1.0", features = ["derive"] }
-atlatl = { version = "0.1.2", features = ["serde"] }
