@@ -20,6 +20,7 @@ build = "build.rs"
 
 [features]
 embed_all = ["pocket-resources"]
+embed_en-us = ["pocket-resources"]
 build_dictionaries = []
 
 # Unicode normalization.

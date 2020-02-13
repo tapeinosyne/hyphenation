@@ -60,7 +60,7 @@ Note that embeding significantly increases the size of the compiled artifact.
 [`from_path`]: trait.Load.html#method.from_path
 */
 
-#[cfg(feature = "embed_all")] use resources::ResourceId;
+#[cfg(any(feature = "embed_all", feature = "embed_en-us"))] use resources::ResourceId;
 use bincode as bin;
 use std::error;
 use std::fmt;
@@ -92,7 +92,7 @@ pub trait Load : Sized {
     fn any_from_reader<R>(reader : &mut R) -> Result<Self>
     where R : io::Read;
 
-    #[cfg(feature = "embed_all")]
+    #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
     /// Deserialize the embedded dictionary for the given language.
     fn from_embedded(lang : Language) -> Result<Self>;
 
@@ -116,7 +116,7 @@ macro_rules! impl_load {
                 Ok(dict)
             }
 
-            #[cfg(feature = "embed_all")]
+            #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
             fn from_embedded(lang : Language) -> Result<Self> {
                 let dict_bytes = retrieve_resource(lang.code(), $suffix) ?;
                 let dict = bin::deserialize(dict_bytes) ?;
@@ -130,7 +130,7 @@ impl_load! { Standard, "standard" }
 impl_load! { Extended, "extended" }
 
 
-#[cfg(feature = "embed_all")]
+#[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
 fn retrieve_resource<'a>(code : &str, suffix : &str) -> Result<&'a [u8]> {
     let name = format!("{}.{}.bincode", code, suffix);
     let res : Option<ResourceId> = ResourceId::from_name(&name);

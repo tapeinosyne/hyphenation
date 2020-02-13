@@ -20,7 +20,7 @@ use std::fmt;
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
-use std::iter::FromIterator;
+use std::iter::{self, FromIterator};
 use std::path::{Path, PathBuf};
 
 use hyphenation_commons::dictionary::*;
@@ -263,6 +263,11 @@ fn main() {
 
             write(&dict, &paths.destine_dict(language, _ext_out)).unwrap();
         }
+    }
+
+    #[cfg(all(feature = "embed_en-us", not(feature = "embed_all")))] {
+        let dict = (&dict_folder, Paths::dict_name(EnglishUS, _std_out));
+        pocket_resources::package(iter::once(&dict)).unwrap();
     }
 
     #[cfg(feature = "embed_all")] {

@@ -91,7 +91,7 @@ extern crate bincode;
 extern crate hyphenation_commons;
 
 
-#[cfg(feature = "embed_all")] mod resources;
+#[cfg(any(feature = "embed_all", feature = "embed_en-us"))] mod resources;
 mod case_folding;
 pub mod hyphenator;
 pub mod extended;
