@@ -189,18 +189,6 @@ fn copy_dir(from : &Path, to : &Path) -> Result<(), Error> {
 }
 
 
-// In which we cope with Cargo's criteria for rebuilding
-
-fn lib_rebuildables() -> Vec<PathBuf> {
-    vec![ Path::new("hyphenation_commons").join("src").join("dictionary.rs")
-        , Path::new("src").join("load.rs") ]
-}
-
-fn demand_rebuild<P>(path : P) where P : AsRef<Path> {
-    println!("cargo:rerun-if-changed={}", path.as_ref().display());
-}
-
-
 fn main() {
     let dict_folder = Path::new("dictionaries");
     let _std_out = "standard";
@@ -278,19 +266,7 @@ fn main() {
         pocket_resources::package(all_paths.iter()).unwrap();
     }
 
-    // Specify which files will cause a rebuild if changed.
-
-    for path in lib_rebuildables().iter() {
-        demand_rebuild(&path);
-    }
-
-    for &lang in std_langs.iter() {
-        demand_rebuild(Patterns::sourcepath(lang, &paths));
-        demand_rebuild(Exceptions::sourcepath(lang, &paths));
-    }
-    for &lang in ext_langs.iter() {
-        demand_rebuild(ext::Patterns::sourcepath(lang, &paths));
-    }
+    println!("cargo:rerun-if-changed=build.rs");
 }
 
 
