@@ -40,18 +40,18 @@ members = ["hyphenation_commons"]
 [dependencies]
 hyphenation_commons = { path = "hyphenation_commons", version = "0.7.1" }
 atlatl = { version = "0.1.2", features = ["serde"] }
-bincode = "1.0"
+bincode = "1.2"
 serde = "1.0"
 
 [build-dependencies]
 hyphenation_commons = { path = "hyphenation_commons", version = "0.7.1" }
 atlatl = { version = "0.1.2", features = ["serde"] }
-bincode = "1.0"
+bincode = "1.2"
 serde = "1.0"
 pocket-resources = { version  = "0.3", optional = true }
 unicode-normalization = { version  = "0.1", optional = true }
 
 [dev-dependencies]
-lazy_static = "1.1"
-quickcheck = "0.7"
+lazy_static = "1.4"
+quickcheck = "0.9"
 unicode-segmentation = "1.2"
