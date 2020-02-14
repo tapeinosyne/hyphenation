@@ -22,7 +22,7 @@ macro_rules! fiant_linguae {
                 }
             }
 
-            /// The TeX language code.
+            /// The [BCP 47](https://tools.ietf.org/html/bcp47) tag for this language.
             pub fn code(&self) -> &'static str {
                 match *self {
                     $( Language::$lang => $code, )*
