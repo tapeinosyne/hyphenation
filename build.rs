@@ -20,7 +20,7 @@ use std::fmt;
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
-use std::iter::{self, FromIterator};
+use std::iter::{FromIterator};
 use std::path::{Path, PathBuf};
 
 use hyphenation_commons::dictionary::*;
@@ -197,8 +197,8 @@ fn main() {
     let dict_source = paths.source_item(dict_folder);
     let dict_out = paths.destine_item(dict_folder);
 
-    let ext_langs = vec![Catalan, Hungarian];
-    let std_langs =
+    let _ext_langs = vec![Catalan, Hungarian];
+    let _std_langs =
         vec![ Afrikaans, Armenian, Assamese, Basque, Belarusian, Bengali, Bulgarian, Catalan,
               Chinese, Coptic, Croatian, Czech, Danish, Dutch, EnglishGB, EnglishUS, Esperanto,
               Estonian, Ethiopic, Finnish, French, Friulan, Galician, Georgian, German1901,
@@ -227,7 +227,7 @@ fn main() {
               feature = "nfkc", feature = "nfkd"))]
     {
         println!("Building `Standard` dictionaries:");
-        for &language in std_langs.iter() {
+        for &language in _std_langs.iter() {
             println!("  - {:?}", language);
             let dict = Standard {
                 language,
@@ -240,7 +240,7 @@ fn main() {
         }
 
         println!("Building `Extended` dictionaries:");
-        for &language in ext_langs.iter() {
+        for &language in _ext_langs.iter() {
             println!("  - {:?}", language);
             let dict = ext::Extended {
                 language,
@@ -254,14 +254,16 @@ fn main() {
     }
 
     #[cfg(all(feature = "embed_en-us", not(feature = "embed_all")))] {
+        use std::iter;
+
         let dict = (&dict_folder, Paths::dict_name(EnglishUS, _std_out));
         pocket_resources::package(iter::once(&dict)).unwrap();
     }
 
     #[cfg(feature = "embed_all")] {
         // HEED: `pocket_resources` requires paths to be relative
-        let std_p = std_langs.iter().map(|&l| (&dict_folder, Paths::dict_name(l, _std_out)));
-        let ext_p = ext_langs.iter().map(|&l| (&dict_folder, Paths::dict_name(l, _ext_out)));
+        let std_p = _std_langs.iter().map(|&l| (&dict_folder, Paths::dict_name(l, _std_out)));
+        let ext_p = _ext_langs.iter().map(|&l| (&dict_folder, Paths::dict_name(l, _ext_out)));
         let all_paths : Vec<_> = std_p.chain(ext_p).collect();
         pocket_resources::package(all_paths.iter()).unwrap();
     }
