@@ -104,7 +104,7 @@ macro_rules! impl_load {
             fn from_reader<R>(lang : Language, reader : &mut R) -> Result<Self>
             where R : io::Read {
                 let dict : Self = bin::config().limit(5_000_000).deserialize_from(reader) ?;
-                let (found, expected) = (dict.language, lang);
+                let (found, expected) = (dict.language(), lang);
                 if found != expected {
                     Err(Error::LanguageMismatch { expected, found })
                 } else { Ok(dict) }

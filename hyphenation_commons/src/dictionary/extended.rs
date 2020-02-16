@@ -6,9 +6,10 @@ Data structures for extended hyphenation[1].
 
 use std::collections::HashMap;
 
-use dictionary::Locus;
+use dictionary::{uniques, Locus, PrefixTallies};
+use dictionary::trie::{self, Trie};
 use language::Language;
-use dictionary::trie::Trie;
+use parse::Parse;
 
 /// The partial score carried by an extended hyphenation pattern.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -38,9 +39,19 @@ pub struct Subregion {
 /// A trie mapping hyphenation patterns to their extended tallies.
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Patterns {
-    pub tallies : Vec<Tally>,
-    pub automaton : Trie
+    tallies : Vec<Tally>,
+    automaton : Trie
 }
+
+impl Patterns {
+    pub fn from_iter<I>(iter: I) -> Result<Self, trie::Error>
+    where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)> {
+        let (kvs, tallies) = uniques(iter.into_iter());
+        let automaton = Trie::from_iter(kvs.into_iter()) ?;
+        Ok(Patterns { tallies, automaton })
+    }
+}
+
 
 /// A specialized hashmap associating words to their known hyphenation.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -53,10 +64,43 @@ pub struct Exceptions(pub HashMap<String, Vec<(usize, Option<Subregion>)>>);
 /// exceptions, and the character boundaries for hyphenation.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Extended {
-    pub language : Language,
-    pub patterns : Patterns,
+    language : Language,
+    patterns : Patterns,
     pub exceptions : Exceptions,
     /// The minimum number of `char`s from the start and end of a word where
     /// breaks may not occur.
     pub minima: (usize, usize)
+}
+
+impl Extended {
+    /// The language for which this dictionary can provide hyphenation.
+    pub fn language(&self) -> Language { self.language }
+
+    /// An iterator over the tallies associated to all prefixes of the query, including
+    /// the query itself.
+    pub fn prefix_tallies<'f, 'q>(&'f self, query : &'q [u8]) -> PrefixTallies<'f, 'q, Tally> {
+        PrefixTallies {
+            matches : self.patterns.automaton.get_prefixes(query),
+            tallies : &self.patterns.tallies
+        }
+    }
+}
+
+/// An intermediate dictionary builder, its primary purpose is visibility hygiene.
+#[derive(Debug)]
+pub struct Builder {
+    pub language : Language,
+    pub patterns : Patterns,
+    pub exceptions : Exceptions
+}
+
+impl From<Builder> for Extended {
+    fn from(b : Builder) -> Extended {
+         Extended {
+            language : b.language,
+            patterns : b.patterns,
+            exceptions : b.exceptions,
+            minima : b.language.minima()
+        }
+    }
 }

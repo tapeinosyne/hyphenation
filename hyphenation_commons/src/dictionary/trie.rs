@@ -131,34 +131,20 @@ impl<'de> Deserialize<'de> for Trie {
 
 
 #[derive(Debug)]
-pub enum Error {
-    Fst(fst::Error),
-    Serialization(String)
-}
+pub struct Error(pub fst::Error);
 
 impl fmt::Display for Error {
     fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
-        let message = match self {
-            Error::Serialization(ref s) => format!("Dictionary serialization failed: {}", s),
-            Error::Fst(ref err) =>
-                format!("The dictionary's internal trie could not be built:\n{}", err)
-        };
+        let message = format!("The dictionary's internal trie could not be built:\n{}", &self.0);
 
         f.write_str(&message)
     }
 }
 
 impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        match self {
-            Error::Fst(ref err) => Some(err),
-            _ => None
-        }
-    }
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> { Some(&self.0) }
 }
 
 impl From<fst::Error> for Error {
-    fn from(err : fst::Error) -> Self {
-        Error::Fst(err)
-    }
+    fn from(err : fst::Error) -> Self { Error(err) }
 }

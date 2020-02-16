@@ -9,11 +9,9 @@ extern crate fst;
 extern crate hyphenation_commons;
 extern crate serde;
 
-use fst::Map;
 use bincode as bin;
 use serde::ser;
 use std::collections::HashMap;
-use std::hash::Hash;
 use std::env;
 use std::error;
 use std::fmt;
@@ -23,12 +21,10 @@ use std::io::prelude::*;
 use std::iter::{FromIterator};
 use std::path::{Path, PathBuf};
 
-use hyphenation_commons::dictionary::*;
-use hyphenation_commons::dictionary::trie::Trie;
+use hyphenation_commons::dictionary::{self, *};
 use hyphenation_commons::dictionary::extended as ext;
-use hyphenation_commons::Language;
-use hyphenation_commons::Language::*;
-use hyphenation_commons::parse::*;
+use hyphenation_commons::Language::{self, *};
+use hyphenation_commons::parse::Parse;
 
 
 // Configuration of exclusive optional features
@@ -57,64 +53,27 @@ mod configuration {
 
 trait TryFromIterator<Tally> : Sized {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, Tally)>
-            + ExactSizeIterator;
-}
-
-fn uniques<I, T>(iter : I) -> (Vec<(String, u64)>, Vec<T>)
-where T : Eq + Clone + Hash
-    , I : IntoIterator<Item = (String, T)>
-        + ExactSizeIterator
-{
-    let mut pairs = Vec::with_capacity(iter.len());
-    let mut tally_ids = HashMap::with_capacity(iter.len());
-    let mut tallies : Vec<T> = Vec::with_capacity(256);
-    for (pattern, tally) in iter {
-        match tally_ids.get(&tally) {
-            Some(&id) => pairs.push((pattern, id)),
-            None => {
-                let id = tallies.len() as u64;
-                tallies.push(tally.clone());
-                tally_ids.insert(tally, id);
-                pairs.push((pattern, id));
-            }
-        }
-    }
-    pairs.sort_by(|a, b| a.0.cmp(&b.0));
-    pairs.dedup_by(|a, b| a.0 == b.0);
-    (pairs, tallies)
+    where I : IntoIterator<Item = (String, Tally)>;
 }
 
 impl TryFromIterator<<Patterns as Parse>::Tally> for Patterns {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)>
-            + ExactSizeIterator
-    {
-        let (kvs, tallies) = uniques(iter);
-        let map = Map::from_iter(kvs.into_iter()) ?;
-        let automaton = Trie(map);
-        Ok(Patterns { tallies, automaton })
+    where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)> {
+        Ok(Patterns::from_iter(iter) ?)
     }
 }
 
 impl TryFromIterator<<Exceptions as Parse>::Tally> for Exceptions {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, <Exceptions as Parse>::Tally)>
-            + ExactSizeIterator
-    {
+    where I : IntoIterator<Item = (String, <Exceptions as Parse>::Tally)> {
         Ok(Exceptions(HashMap::from_iter(iter)))
     }
 }
 
 impl TryFromIterator<<ext::Patterns as Parse>::Tally> for ext::Patterns {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, <ext::Patterns as Parse>::Tally)>
-            + ExactSizeIterator
-    {
-        let (kvs, tallies) = uniques(iter);
-        let map = Map::from_iter(kvs.into_iter()) ?;
-        let automaton = Trie(map);
-        Ok(ext::Patterns { tallies, automaton })
+    where I : IntoIterator<Item = (String, <ext::Patterns as Parse>::Tally)> {
+        Ok(ext::Patterns::from_iter(iter) ?)
     }
 }
 
@@ -135,7 +94,7 @@ impl Paths {
         Ok(Paths { source, out })
     }
 
-    fn destine_item<P : AsRef<Path>>(&self, p : P) -> PathBuf { self.out.join(p.as_ref()) }
+    fn place_item<P : AsRef<Path>>(&self, p : P) -> PathBuf { self.out.join(p.as_ref()) }
     fn source_item<P : AsRef<Path>>(&self, p : P) -> PathBuf { self.source.join(p.as_ref()) }
 
     fn source_pattern(&self, lang : Language, suffix : &str) -> PathBuf {
@@ -143,8 +102,8 @@ impl Paths {
         self.source_item("patterns").join(fname)
     }
 
-    fn destine_dict(&self, lang : Language, suffix : &str) -> PathBuf {
-        self.destine_item("dictionaries").join(Self::dict_name(lang, suffix))
+    fn place_dict(&self, lang : Language, suffix : &str) -> PathBuf {
+        self.place_item("dictionaries").join(Self::dict_name(lang, suffix))
     }
 
     fn dict_name(lang : Language, suffix : &str) -> String {
@@ -195,7 +154,7 @@ fn main() {
     let _ext_out = "extended";
     let paths = Paths::new().unwrap();
     let dict_source = paths.source_item(dict_folder);
-    let dict_out = paths.destine_item(dict_folder);
+    let dict_out = paths.place_item(dict_folder);
 
     let _ext_langs = vec![Catalan, Hungarian];
     let _std_langs =
@@ -229,27 +188,27 @@ fn main() {
         println!("Building `Standard` dictionaries:");
         for &language in _std_langs.iter() {
             println!("  - {:?}", language);
-            let dict = Standard {
+            let builder = Builder {
                 language,
                 patterns : Patterns::build(language, &paths).unwrap(),
-                exceptions : Exceptions::build(language, &paths).unwrap(),
-                minima : language.minima()
+                exceptions : Exceptions::build(language, &paths).unwrap()
             };
 
-            write(&dict, &paths.destine_dict(language, _std_out)).unwrap();
+            let dict = Standard::from(builder);
+            write(&dict, &paths.place_dict(language, _std_out)).unwrap();
         }
 
         println!("Building `Extended` dictionaries:");
         for &language in _ext_langs.iter() {
             println!("  - {:?}", language);
-            let dict = ext::Extended {
+            let builder = ext::Builder {
                 language,
                 patterns : ext::Patterns::build(language, &paths).unwrap(),
-                exceptions : ext::Exceptions::default(),
-                minima : language.minima()
+                exceptions : ext::Exceptions::default()
             };
 
-            write(&dict, &paths.destine_dict(language, _ext_out)).unwrap();
+            let dict = ext::Extended::from(builder);
+            write(&dict, &paths.place_dict(language, _ext_out)).unwrap();
         }
     }
 
@@ -322,4 +281,8 @@ impl From<bin::Error> for Error {
 
 impl From<fst::Error> for Error {
     fn from(err : fst::Error) -> Error { Error::Build(err) }
+}
+
+impl From<dictionary::Error> for Error {
+    fn from(err : dictionary::Error) -> Error { Error::Build(err.0) }
 }

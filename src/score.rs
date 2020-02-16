@@ -68,13 +68,9 @@ impl<'d> Score<'d> for Standard {
         let hyphenable_length = word.len();
         let mut values : Vec<u8> = vec![0; hyphenable_length.saturating_sub(1)];
 
-        let fst = &self.patterns.automaton;
-        let tallies = &self.patterns.tallies;
         for i in 0 .. match_str.len() - 1 {
             let substring = &match_str.as_bytes()[i..];
-            let matches = fst.get_prefixes(substring);
-            for tally_id in matches {
-                let tally = &tallies[tally_id];
+            for tally in self.prefix_tallies(substring) {
                 for &Locus { index, value } in tally {
                     let k = i + index as usize;
                     if k > 1 && k <= hyphenable_length && value > values[k - 2] {
@@ -99,13 +95,9 @@ impl<'d> Score<'d> for Extended {
         let mut values : Vec<u8> = vec![0; hyphenable_length.saturating_sub(1)];
         let mut regions : Vec<Option<&Subregion>> = vec![None; values.len()];
 
-        let fst = &self.patterns.automaton;
-        let tallies = &self.patterns.tallies;
         for i in 0 .. match_str.len() - 1 {
             let substring = &match_str.as_bytes()[i ..];
-            let matches = fst.get_prefixes(substring);
-            for tally_id in matches {
-                let tally = &tallies[tally_id];
+            for tally in self.prefix_tallies(substring) {
                 // NOTE: By convention, competing standard and non-standard patterns
                 // may not assign equal values to the same location.
                 for &(Locus { index, value }, ref r) in tally.subregion.iter() {
