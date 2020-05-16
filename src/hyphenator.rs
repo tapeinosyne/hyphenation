@@ -90,6 +90,10 @@ pub trait Hyphenator<'h> {
     fn add_exception(&mut self, lowercase_word : String, ops : Vec<Self::Exact>)
         -> Option<Vec<Self::Exact>>;
 
+    /// If the word is an exception, remove it and return the previously specified
+    /// opportunities; otherwise, return none.
+    fn remove_exception(&mut self, word : &str) -> Option<Vec<Self::Exact>>;
+
     /// The number of `char`s from the start and end of a word where breaks may
     /// not occur.
     fn unbreakable_chars(&self) -> (usize, usize);
@@ -159,6 +163,10 @@ impl<'h> Hyphenator<'h> for Standard {
         self.exceptions.0.insert(w, ops)
     }
 
+    fn remove_exception(&mut self, w : &str) -> Option<Vec<usize>> {
+        self.exceptions.0.remove(w)
+    }
+
     #[inline] fn unbreakable_chars(&self) -> (usize, usize) { self.minima }
 }
 
@@ -202,6 +210,10 @@ impl<'h> Hyphenator<'h> for Extended {
     fn add_exception(&mut self, w : String, ops : Vec<Self::Exact>)
         -> Option<Vec<Self::Exact>> {
         self.exceptions.0.insert(w, ops)
+    }
+
+    fn remove_exception(&mut self, w : &str) -> Option<Vec<Self::Exact>> {
+        self.exceptions.0.remove(w)
     }
 
     #[inline] fn unbreakable_chars(&self) -> (usize, usize) { self.minima }
