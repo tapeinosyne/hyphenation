@@ -63,7 +63,7 @@ pub trait Hyphenator<'h> {
         match self.boundaries(lowercase_word) {
             None => vec![],
             Some(mins) => {
-                match self.exact(lowercase_word) {
+                match self.exception(lowercase_word) {
                     None => self.opportunities_within(lowercase_word, mins),
                     Some(known) => known
                 }
@@ -77,16 +77,18 @@ pub trait Hyphenator<'h> {
     fn opportunities_within(&'h self, lowercase_word : &str, bounds : (usize, usize))
         -> Vec<Self::Opportunity>;
 
-    /// Retrieve the known exact hyphenation for this word, if any.
-    fn exact(&'h self, lowercase_word : &str) -> Option<Vec<Self::Opportunity>>;
+    /// If this word is a known exception, retrieve its specified hyphenation.
+    fn exception(&'h self, lowercase_word : &str) -> Option<Vec<Self::Opportunity>>;
 
     /// Specify the hyphenation of the given word with an exact sequence of
-    /// opportunities. Subsequent calls to `hyphenate` or `opportunities` will
-    /// yield this hyphenation instead of generating one from patterns.
+    /// opportunities and add it to the exception list. Subsequent calls to
+    /// `hyphenate` or `opportunities` will yield this hyphenation instead of
+    /// generating one from patterns.
     ///
-    /// If the word already has an exact hyphenation, the old opportunities
-    /// are returned.
-    fn add_exact(&mut self, word : String, ops : Vec<Self::Exact>) -> Option<Vec<Self::Exact>>;
+    /// If the word is already a known exception, the old opportunities are
+    /// returned.
+    fn add_exception(&mut self, lowercase_word : String, ops : Vec<Self::Exact>)
+        -> Option<Vec<Self::Exact>>;
 
     /// The number of `char`s from the start and end of a word where breaks may
     /// not occur.
@@ -148,12 +150,12 @@ impl<'h> Hyphenator<'h> for Standard {
     }
 
     #[inline]
-    fn exact(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
+    fn exception(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
         self.exceptions.0.get(w).cloned()
     }
 
     #[inline]
-    fn add_exact(&mut self, w : String, ops : Vec<usize>) -> Option<Vec<usize>> {
+    fn add_exception(&mut self, w : String, ops : Vec<usize>) -> Option<Vec<usize>> {
         self.exceptions.0.insert(w, ops)
     }
 
@@ -193,12 +195,12 @@ impl<'h> Hyphenator<'h> for Extended {
     }
 
     #[inline]
-    fn exact(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
+    fn exception(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
         self.exceptions.0.get(w).map(|v| v.iter().map(|&(i, ref sub)| (i, sub.as_ref())).collect())
     }
 
-    #[inline]
-    fn add_exact(&mut self, w : String, ops : Vec<Self::Exact>) -> Option<Vec<Self::Exact>> {
+    fn add_exception(&mut self, w : String, ops : Vec<Self::Exact>)
+        -> Option<Vec<Self::Exact>> {
         self.exceptions.0.insert(w, ops)
     }
 
