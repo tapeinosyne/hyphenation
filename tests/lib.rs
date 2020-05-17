@@ -174,3 +174,15 @@ fn text() {
     assert_eq!(seg1, expect1);
 
 }
+
+#[test]
+fn bounded_exception() {
+    let e = "anisotropic";  // an-iso-trop-ic, by exception
+
+    let bounded = EN_US.exception(e);
+    let unbounded = EN_US.exception_within(e, (0, e.len()));
+
+    assert_eq!(bounded, Some(vec![2, 5]));
+    assert_eq!(unbounded, Some(vec![2, 5, 9]));
+}
+

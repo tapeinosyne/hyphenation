@@ -71,14 +71,22 @@ pub trait Hyphenator<'h> {
         }
     }
 
-    /// The hyphenation opportunities that arise between the specified indices.
-    ///
-    /// No attempt is made to retrieve a known exact hyphenation.
+    /// The hyphenation opportunities that arise by pattern between the specified
+    /// byte indices.
     fn opportunities_within(&'h self, lowercase_word : &str, bounds : (usize, usize))
         -> Vec<Self::Opportunity>;
 
     /// If this word is a known exception, retrieve its specified hyphenation.
-    fn exception(&'h self, lowercase_word : &str) -> Option<Vec<Self::Opportunity>>;
+    fn exception(&'h self, lowercase_word : &str) -> Option<Vec<Self::Opportunity>> {
+        self.boundaries(lowercase_word)
+            .and_then(|mins| self.exception_within(lowercase_word, mins))
+    }
+
+    /// The hyphenation opportunities that arise by exception between the specified
+    /// byte indices, if any.
+    fn exception_within(&'h self, lowercase_word : &str, bounds : (usize, usize))
+        -> Option<Vec<Self::Opportunity>>;
+
 
     /// Specify the hyphenation of the given word with an exact sequence of
     /// opportunities and add it to the exception list. Subsequent calls to
@@ -95,7 +103,7 @@ pub trait Hyphenator<'h> {
     fn remove_exception(&mut self, word : &str) -> Option<Vec<Self::Exact>>;
 
     /// The number of `char`s from the start and end of a word where breaks may
-    /// not occur.
+    /// not occur, according to dictionary parameters.
     fn unbreakable_chars(&self) -> (usize, usize);
 
     /// The byte indices delimiting the substring where breaks may occur, unless
@@ -154,8 +162,10 @@ impl<'h> Hyphenator<'h> for Standard {
     }
 
     #[inline]
-    fn exception(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
+    fn exception_within(&'h self, w : &str, (l, r) : (usize, usize))
+    -> Option<Vec<Self::Opportunity>> {
         self.exceptions.0.get(w).cloned()
+            .map(|v| v.into_iter().filter(|&i| i >= l && i <= r).collect())
     }
 
     #[inline]
@@ -169,6 +179,7 @@ impl<'h> Hyphenator<'h> for Standard {
 
     #[inline] fn unbreakable_chars(&self) -> (usize, usize) { self.minima }
 }
+
 
 impl<'h> Hyphenator<'h> for Extended {
     type Opportunity = (usize, Option<&'h Subregion>);
@@ -203,8 +214,14 @@ impl<'h> Hyphenator<'h> for Extended {
     }
 
     #[inline]
-    fn exception(&'h self, w : &str) -> Option<Vec<Self::Opportunity>> {
-        self.exceptions.0.get(w).map(|v| v.iter().map(|&(i, ref sub)| (i, sub.as_ref())).collect())
+    fn exception_within(&'h self, w : &str, (l, r) : (usize, usize))
+    -> Option<Vec<Self::Opportunity>>
+    {
+        self.exceptions.0.get(w)
+            .map(|v| v.into_iter()
+                .filter(|&(i, _)| *i >= l && *i <= r)
+                .map(|&(i, ref sub)| (i, sub.as_ref()))
+                .collect())
     }
 
     fn add_exception(&mut self, w : String, ops : Vec<Self::Exact>)
