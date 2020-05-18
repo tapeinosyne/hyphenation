@@ -93,6 +93,7 @@ fiant_linguae! {
     LatinLiturgical,        (2, 2),     "la-x-liturgic";
     Latvian,                (2, 2),     "lv";
     Lithuanian,             (2, 2),     "lt";
+    Macedonian,             (2, 2),     "mk";
     Malayalam,              (1, 1),     "ml";
     Marathi,                (1, 1),     "mr";
     Mongolian,              (2, 2),     "mn-cyrl";

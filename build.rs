@@ -163,9 +163,9 @@ fn main() {
               Estonian, Ethiopic, Finnish, French, Friulan, Galician, Georgian, German1901,
               German1996, GermanSwiss, GreekAncient, GreekMono, GreekPoly, Gujarati, Hindi,
               Hungarian, Icelandic, Indonesian, Interlingua, Irish, Italian, Kannada, Kurmanji,
-              Latin, LatinClassic, LatinLiturgical, Latvian, Lithuanian, Malayalam, Marathi,
-              Mongolian, NorwegianBokmal, NorwegianNynorsk, Occitan, Oriya, Pali, Panjabi,
-              Piedmontese, Polish, Portuguese, Romanian, Romansh, Russian, Sanskrit,
+              Latin, LatinClassic, LatinLiturgical, Latvian, Lithuanian, Macedonian, Malayalam,
+              Marathi, Mongolian, NorwegianBokmal, NorwegianNynorsk, Occitan, Oriya, Pali,
+              Panjabi, Piedmontese, Polish, Portuguese, Romanian, Romansh, Russian, Sanskrit,
               SerbianCyrillic, SerbocroatianCyrillic, SerbocroatianLatin, SlavonicChurch, Slovak,
               Slovenian, Spanish, Swedish, Tamil, Telugu, Thai, Turkish, Turkmen, Ukrainian,
               Uppersorbian, Welsh ];
