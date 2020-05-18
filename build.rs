@@ -191,7 +191,7 @@ fn main() {
             let builder = Builder {
                 language,
                 patterns : Patterns::build(language, &paths).unwrap(),
-                exceptions : Exceptions::build(language, &paths).unwrap()
+                exceptions : Exceptions::build(language, &paths).unwrap_or(Exceptions::default())
             };
 
             let dict = Standard::from(builder);
