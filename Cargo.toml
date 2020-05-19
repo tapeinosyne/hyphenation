@@ -1,6 +1,6 @@
 [package]
 name = "hyphenation"
-version = "0.7.1"
+version = "0.8.0"
 
 authors = ["Andrew <andrew@banausia.com>"]
 license = "Apache-2.0/MIT"
@@ -39,13 +39,13 @@ nfkd = ["unicode-normalization"]
 members = ["hyphenation_commons"]
 
 [dependencies]
-hyphenation_commons = { path = "hyphenation_commons", version = "0.7.1" }
+hyphenation_commons = { path = "hyphenation_commons", version = "0.8.0" }
 fst = "0.4"
 bincode = "1.2"
 serde = "1.0"
 
 [build-dependencies]
-hyphenation_commons = { path = "hyphenation_commons", version = "0.7.1" }
+hyphenation_commons = { path = "hyphenation_commons", version = "0.8.0" }
 fst = "0.4"
 bincode = "1.2"
 serde = "1.0"

@@ -1,5 +1,23 @@
 # `hyphenation`
 
+## 0.8.0
+
+Language support:
+- New language: Macedonian [mk]
+- `hyph-utf8` patterns updated to CTAN version 2020.03.25:
+  - Major update to Spanish [es] patterns
+  - Major update to Classical Latin patterns [la-x-classic]
+
+Library changes:
+- Dictionaries now have a much more compact representation. Although hyphenation is ~3x slower, there should be no discernible difference in typical workloads.
+- `hyphenator::exact` has been renamed to `hyphenator::exception`, in accordance with TeX conventions.
+- Exceptions can now be removed from dictionaries with `Hyphenator::remove_exception()`
+
+Fixes:
+- `hyphenation` will no longer attempt to rebuild (#19) upon compilation of a dependant.
+- `Hyphenator::exception()` (née `exact()`) no longer ignores hyphenation boundaries (#20) set by the dictionary. The old behavior can be replicated with [`exception_within()`](https://docs.rs/hyphenation/0.8.0/hyphenation/hyphenator/trait.Hyphenator.html#tymethod.exception_within).
+
+
 ## 0.7.1
 
 - Backward compatibility with Rust 1.21.0 and earlier.

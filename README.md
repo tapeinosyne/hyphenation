@@ -4,7 +4,7 @@ Hyphenation for UTF-8 strings in a variety of languages.
 
 ```toml
 [dependencies]
-hyphenation = "0.7.1"
+hyphenation = "0.8.0"
 ```
 
 Two strategies are available:
@@ -25,7 +25,7 @@ The `hyphenation` library relies on hyphenation dictionaries, external files tha
 
 ```toml
 [dependencies]
-hyphenation = { version = "0.7.1", features = ["embed_all"] }
+hyphenation = { version = "0.8.0", features = ["embed_all"] }
 ```
 
 The topmost module of `hyphenation` offers a small prelude that can be imported to expose the most common functionality.
@@ -33,7 +33,7 @@ The topmost module of `hyphenation` offers a small prelude that can be imported 
 ```rust
 use hyphenation::*;
 
-// Retrieve the embedded American English dictionary for `Standard` hyphenation.
+// Retrieve the embedded American English dictionary for `Standard` Knuth-Liang hyphenation.
 let en_us = Standard::from_embedded(Language::EnglishUS) ?;
 
 // Identify valid breaks in the given word.
@@ -41,22 +41,26 @@ let hyphenated = en_us.hyphenate("hyphenation");
 
 // Word breaks are represented as byte indices into the string.
 let break_indices = &hyphenated.breaks;
-assert_eq!(break_indices, &[2, 6]);
+assert_eq!(break_indices, &[2, 6, 7]);
 
-// The segments of a hyphenated word can be iterated over.
-let segments = hyphenated.into_iter();
-let collected : Vec<String> = segments.collect();
-assert_eq!(collected, vec!["hy", "phen", "ation"]);
+// The segments of a hyphenated word can be iterated over, marked or unmarked.
+let marked = hyphenated.iter();
+let collected : Vec<String> = marked.collect();
+assert_eq!(collected, vec!["hy-", "phen-", "a-", "tion"]);
 
-/// `hyphenate()` is case-insensitive.
-let uppercase : Vec<_> = en_us.hyphenate("CAPITAL").into_iter().collect();
+let unmarked = hyphenated.iter().segments();
+let collected : Vec<&str> = unmarked.collect();
+assert_eq!(collected, vec!["hy", "phen", "a", "tion"]);
+
+// `hyphenate()` is case-insensitive.
+let uppercase : Vec<_> = en_us.hyphenate("CAPITAL").into_iter().segments().collect();
 assert_eq!(uppercase, vec!["CAP", "I", "TAL"]);
 ```
 
 
 ### Loading dictionaries at runtime
 
-The current set of available dictionaries amounts to ~7MB of data, the embedding of which is seldom desirable. Most applications should prefer to load individual dictionaries at runtime, like so:
+The current set of available dictionaries amounts to ~2.8MB of data. Although embedding them is an option, most applications should prefer to load individual dictionaries at runtime, like so:
 
 ```rust
 let path_to_dict = "/path/to/en-us.bincode";
@@ -98,7 +102,7 @@ Hyphenation patterns for languages affected by normalization occasionally cover 
 
 ```toml
 [dependencies.hyphenation]
-version = "0.7.1"
+version = "0.8.0"
 features = ["nfc"]
 ```
 
@@ -109,7 +113,7 @@ The `features` field may contain exactly *one* of the following normalization op
 - `"nfkc"`, for compatibility composition;
 - `"nfkd"`, for compatibility decomposition.
 
-It is recommended to build `hyphenation` in release mode if normalization is enabled, since the bundled hyphenation patterns will need to be reprocessed into dictionaries.
+You may prefer to build `hyphenation` in release mode if normalization is enabled, since the bundled hyphenation patterns will need to be reprocessed into dictionaries.
 
 
 ## License

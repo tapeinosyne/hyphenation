@@ -1,6 +1,6 @@
 [package]
 name = "hyphenation_commons"
-version = "0.7.1"  # version-locked to the main `hyphenation` crate
+version = "0.8.0"  # version-locked to the main `hyphenation` crate
 
 authors = ["Andrew <andrew@banausia.com>"]
 license = "Apache-2.0/MIT"
