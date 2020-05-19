@@ -10,13 +10,13 @@ use std::slice;
 
 
 #[derive(Debug, Default)]
-pub struct Trie(Map);
+pub struct Trie(Map<Vec<u8>>);
 
 impl Trie {
     pub fn as_bytes(&self) -> &[u8] { self.0.as_fst().as_bytes() }
 
     pub fn from_bytes(bs : Vec<u8>) -> Result<Self, Error> {
-        let map = Map::from_bytes(bs) ?;
+        let map = Map::new(bs) ?;
         Ok(Trie(map))
     }
 
@@ -39,7 +39,7 @@ impl Trie {
 
 #[derive(Clone)]
 pub struct PrefixMatches<'f, 'q> {
-    fst : &'f raw::Fst,
+    fst : &'f raw::Fst<Vec<u8>>,
     node : raw::Node<'f>,
     output : raw::Output,
     query : slice::Iter<'q, u8>,
@@ -70,16 +70,16 @@ impl<'f, 'q> Iterator for PrefixMatches<'f, 'q> {
 }
 
 
-impl AsRef<fst::Map> for Trie {
-    fn as_ref(&self) -> &fst::Map { &self.0 }
+impl AsRef<fst::Map<Vec<u8>>> for Trie {
+    fn as_ref(&self) -> &fst::Map<Vec<u8>> { &self.0 }
 }
 
-impl AsMut<fst::Map> for Trie {
-    fn as_mut(&mut self) -> &mut fst::Map { &mut self.0 }
+impl AsMut<fst::Map<Vec<u8>>> for Trie {
+    fn as_mut(&mut self) -> &mut fst::Map<Vec<u8>> { &mut self.0 }
 }
 
-impl From<fst::Map> for Trie {
-    fn from(m : fst::Map) -> Self { Trie(m) }
+impl From<fst::Map<Vec<u8>>> for Trie {
+    fn from(m : fst::Map<Vec<u8>>) -> Self { Trie(m) }
 }
 
 

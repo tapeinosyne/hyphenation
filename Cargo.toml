@@ -40,13 +40,13 @@ members = ["hyphenation_commons"]
 
 [dependencies]
 hyphenation_commons = { path = "hyphenation_commons", version = "0.7.1" }
-fst = "0.3"
+fst = "0.4"
 bincode = "1.2"
 serde = "1.0"
 
 [build-dependencies]
 hyphenation_commons = { path = "hyphenation_commons", version = "0.7.1" }
-fst = "0.3"
+fst = "0.4"
 bincode = "1.2"
 serde = "1.0"
 pocket-resources = { version  = "0.3", optional = true }
