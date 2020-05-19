@@ -14,7 +14,7 @@ keywords = ["text", "typesetting"]
 
 
 include = ["**/*.rs", "**/Cargo.toml", "dictionaries/*", "patterns/*",
-           "README.md", "LICENSE*"]
+           "README.md", "CHANGELOG.md", "LICENSE*"]
 build = "build.rs"
 
 
