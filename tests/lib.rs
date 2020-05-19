@@ -186,3 +186,21 @@ fn bounded_exception() {
     assert_eq!(unbounded, Some(vec![2, 5, 9]));
 }
 
+#[test]
+fn readme_examples() {
+    let hyphenated = EN_US.hyphenate("hyphenation");
+
+    let break_indices = &hyphenated.breaks;
+    assert_eq!(break_indices, &[2, 6, 7]);
+
+    let marked = hyphenated.iter();
+    let collected : Vec<String> = marked.collect();
+    assert_eq!(collected, vec!["hy-", "phen-", "a-", "tion"]);
+
+    let unmarked = hyphenated.iter().segments();
+    let collected : Vec<&str> = unmarked.collect();
+    assert_eq!(collected, vec!["hy", "phen", "a", "tion"]);
+
+    let uppercase : Vec<_> = EN_US.hyphenate("CAPITAL").into_iter().segments().collect();
+    assert_eq!(uppercase, vec!["CAP", "I", "TAL"]);
+}
