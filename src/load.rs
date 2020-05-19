@@ -13,7 +13,7 @@ use hyphenation::{Standard, Language};
 The primary function of [`Load`] is to deserialize dictionaries from
 buffers – usually, file buffers.
 
-```norun
+```ignore
 use std::io;
 use std::fs::File;
 
@@ -26,7 +26,7 @@ let english_us = Standard::from_reader(Language::EnglishUS, &mut reader) ?;
 Dictionaries can be loaded from the file system rather more succintly with
 the [`from_path`] shorthand:
 
-```norun
+```ignore
 let path_to_dict = "/path/to/english-dictionary.bincode";
 let english_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
 ```
@@ -35,7 +35,7 @@ Dictionaries bundled with the `hyphenation` library are copied to Cargo's
 output directory at build time. To locate them, look for a `dictionaries`
 folder under `target`:
 
-```ignore
+```text
 $ find target -name "dictionaries"
 target/debug/build/hyphenation-33034db3e3b5f3ce/out/dictionaries
 ```
@@ -53,7 +53,7 @@ use hyphenation::{Standard, Language, Load};
 let english_us = Standard::from_embedded(Language::EnglishUS) ?;
 ```
 
-Note that embeding significantly increases the size of the compiled artifact.
+Note that embedding significantly increases the size of the compiled artifact.
 
 
 [`Load`]: trait.Load.html

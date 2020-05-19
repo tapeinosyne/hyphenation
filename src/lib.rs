@@ -6,7 +6,7 @@ A typical import comprises the [`Hyphenator`] trait, the [`Standard`]
 dictionary type, and the [`Language`] enum. This exposes the crate's core
 functionality, as well as the set of available languages.
 
-```ignore
+```no_run
 extern crate hyphenation;
 
 use hyphenation::{Hyphenator, Standard, Language};
@@ -29,8 +29,8 @@ Our English dictionary can now be used as a [`Hyphenator`].
 
 ### Hyphenators
 
-As the primary interface of this library, hyphenators take care of seeking
-out opportunities for hyphenation within individual words.
+As the primary interface of this library, hyphenators take care of identifying
+opportunities for hyphenation within individual words.
 
 ```ignore
 let hyphenated = en_us.hyphenate("anfractuous");
