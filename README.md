@@ -118,4 +118,10 @@ It is recommended to build `hyphenation` in release mode if normalization is ena
   - the Apache License, Version 2.0
   - the MIT license
 
-`texhyphen` and other hyphenation patterns © their respective owners; see `patterns/*.lic.txt` files for licensing information.
+`hyph-utf8` hyphenation patterns © their respective owners; see their [master files](https://github.com/hyphenation/tex-hyphen/tree/49706f9cfa97f6ead26b473ec10d23d5a651318a/hyph-utf8/tex/generic/hyph-utf8/patterns/tex) for licensing information.
+
+`patterns/hyph-hu.ext.txt` (extended Hungarian hyphenation patterns) is licensed under:
+- MPL 1.1 (refer to `patterns/hyph-hu.ext.lic.txt`)
+
+`patterns/hyph-ca.ext.txt` (extended Catalan hyphenation patterns) is licensed under:
+- LGPL v.3.0 or higher (refer to `patterns/hyph-ca.ext.lic.txt`)
