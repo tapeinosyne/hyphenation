@@ -153,7 +153,7 @@ fn main() {
     let _std_out = "standard";
     let _ext_out = "extended";
     let paths = Paths::new().unwrap();
-    let dict_source = paths.source_item(dict_folder);
+    let _dict_source = paths.source_item(dict_folder);
     let dict_out = paths.place_item(dict_folder);
 
     let _ext_langs = vec![Catalan, Hungarian];
@@ -177,7 +177,7 @@ fn main() {
     #[cfg(not(any(feature = "build_dictionaries", feature = "nfc", feature = "nfd",
                   feature = "nfkc", feature = "nfkd")))]
     {
-        copy_dir(dict_source.as_path(), dict_out.as_path()).unwrap();
+        copy_dir(_dict_source.as_path(), dict_out.as_path()).unwrap();
     }
 
     // Otherwise, process the bundled patterns into new dictionaries and similarly
