@@ -64,16 +64,6 @@ fn word_hyphenate_en_us(b : &mut Bencher) {
 }
 
 #[bench]
-fn word_segments_en_us(b : &mut Bencher) {
-    lazy_static::initialize(&EN_US);
-    b.iter(||
-        for w in WORDS.iter() {
-            for s in EN_US.hyphenate(w).into_iter().segments() { black_box(s); }
-        }
-    )
-}
-
-#[bench]
 fn standard_opportunities_hu(b : &mut Bencher) {
     lazy_static::initialize(&HU_STD);
     b.iter(|| HU_STD.opportunities("asszonnyal"))
