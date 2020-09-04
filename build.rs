@@ -135,7 +135,7 @@ impl Build for ext::Patterns { fn suffix() -> &'static str { "ext" } }
 
 fn write<T>(item : &T, path : &Path) -> Result<(), Error> where T : ser::Serialize {
     let mut buffer = File::create(&path).map(|f| io::BufWriter::new(f)) ?;
-    bin::config().limit(5_000_000).serialize_into(&mut buffer, item) ?;
+    bin::serialize_into(&mut buffer, item) ?;
     Ok(())
 }
 

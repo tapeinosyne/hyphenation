@@ -103,7 +103,7 @@ macro_rules! impl_load {
         impl Load for $dict {
             fn from_reader<R>(lang : Language, reader : &mut R) -> Result<Self>
             where R : io::Read {
-                let dict : Self = bin::config().limit(5_000_000).deserialize_from(reader) ?;
+                let dict : Self = bin::deserialize_from(reader) ?;
                 let (found, expected) = (dict.language(), lang);
                 if found != expected {
                     Err(Error::LanguageMismatch { expected, found })
@@ -112,7 +112,7 @@ macro_rules! impl_load {
 
             fn any_from_reader<R>(reader : &mut R) -> Result<Self>
             where R : io::Read {
-                let dict : Self = bin::config().limit(5_000_000).deserialize_from(reader) ?;
+                let dict : Self = bin::deserialize_from(reader) ?;
                 Ok(dict)
             }
 
