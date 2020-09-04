@@ -197,7 +197,7 @@ where I : Iterator<Item = (usize, Option<&'t Subregion>)> {
                 let (segment_start, fore) = self.queued.take().unwrap_or((start, ""));
                 let (segment_end, aft) = {
                     let (subst, queued) = subr.substitution.split_at(subr.breakpoint);
-                    if queued.len() > 0 {
+                    if !queued.is_empty() {
                         self.queued = Some((subr.right, queued));
                     }
                     (end - subr.left, subst)

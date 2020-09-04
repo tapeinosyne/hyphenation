@@ -15,7 +15,7 @@ use score::Score;
 /// resorting to best-effort hyphenation.
 pub fn soft_hyphen_indices(word : &str) -> Option<Vec<usize>> {
     let shys : Vec<_> = word.match_indices('\u{00ad}').map(|(i, _)| i).collect();
-    if shys.len() > 0 {
+    if !shys.is_empty() {
         Some(shys)
     } else { None }
 }
@@ -140,7 +140,7 @@ impl<'h> Hyphenator<'h> for Standard {
             Some(ops) => ops,
             None => {
                 let Prepared { ref word, ref shifts } = prepare(word);
-                if shifts.len() > 0 {
+                if !shifts.is_empty() {
                     self.opportunities(word).into_iter()
                         .map(move |o| realign(o, shifts)).collect()
                 } else { self.opportunities(word) }
@@ -190,7 +190,7 @@ impl<'h> Hyphenator<'h> for Extended {
             Some(ops) => ops.into_iter().map(|i| (i, None)).collect(),
             None => {
                 let Prepared { ref word, ref shifts } = prepare(word);
-                if shifts.len() > 0 {
+                if !shifts.is_empty() {
                     self.opportunities(word).into_iter()
                         .map(move |(i, subr)| (realign(i, shifts), subr)).collect()
                 } else { self.opportunities(word) }
@@ -218,7 +218,7 @@ impl<'h> Hyphenator<'h> for Extended {
     -> Option<Vec<Self::Opportunity>>
     {
         self.exceptions.0.get(w)
-            .map(|v| v.into_iter()
+            .map(|v| v.iter()
                 .filter(|&(i, _)| *i >= l && *i <= r)
                 .map(|&(i, ref sub)| (i, sub.as_ref()))
                 .collect())

@@ -32,7 +32,7 @@ impl Trie {
             fst,
             node : fst.root(),
             output : raw::Output::zero(),
-            query : query.into_iter()
+            query : query.iter()
         }
     }
 }
