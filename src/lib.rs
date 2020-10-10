@@ -86,6 +86,8 @@ hyphen on new lines).
 [`Extended`]: extended/struct.Extended.html
 */
 
+#![forbid(unsafe_code)]
+
 extern crate fst;
 extern crate bincode;
 extern crate hyphenation_commons;
