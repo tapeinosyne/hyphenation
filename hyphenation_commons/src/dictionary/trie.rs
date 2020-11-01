@@ -9,7 +9,7 @@ use std::fmt;
 use std::slice;
 
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Trie(Map<Vec<u8>>);
 
 impl Trie {
