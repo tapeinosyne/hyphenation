@@ -19,7 +19,7 @@ pub struct Locus {
 }
 
 /// A trie mapping hyphenation patterns to their tallies.
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Patterns {
     tallies : Vec<Vec<Locus>>,
     automaton : Trie
@@ -42,7 +42,7 @@ pub struct Exceptions(pub HashMap<String, Vec<usize>>);
 ///
 /// It comprises the working language, the pattern and exception sets,
 /// and the character boundaries for hyphenation.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Standard {
     language : Language,
     patterns : Patterns,
