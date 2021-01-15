@@ -11,10 +11,9 @@ use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
 extern crate hyphenation_commons;
-use hyphenation::*;
 use hyphenation::extended::*;
 use hyphenation::Language::*;
-
+use hyphenation::*;
 
 fn fiat_std(lang : Language) -> Standard {
     let filename = format!("{}.standard.bincode", lang.code());
@@ -50,7 +49,9 @@ fn opportunities_within_bounds() {
         let ci : Vec<_> = s.char_indices().collect();
         let (l_min, r_min) = EnglishUS.minima();
         let s_len = ci.len();
-        if s_len < l_min + r_min { return TestResult::discard() }
+        if s_len < l_min + r_min {
+            return TestResult::discard();
+        }
 
         let os : Vec<_> = EN_US.opportunities(&s);
         let ((l, _), (r, _)) = (ci[l_min], ci[s_len - r_min]);
@@ -62,15 +63,14 @@ fn opportunities_within_bounds() {
     quickcheck(property as fn(String) -> TestResult);
 }
 
-
 #[test]
 fn basics_standard() {
     // Standard hyphenation
     let w0 = "anfractuous";
-    let w1 = "hypha";        // minimum hyphenable length
-    // Exceptions
+    let w1 = "hypha"; // minimum hyphenable length
+                      // Exceptions
     let ex0 = "hyphenation";
-    let ex1 = "bevies";     // unhyphenable (by exception)
+    let ex1 = "bevies"; // unhyphenable (by exception)
 
     let h_w0 = EN_US.hyphenate(w0);
     let h_w1 = EN_US.hyphenate(w1);
@@ -157,7 +157,7 @@ fn language_mismatch_on_load() {
 fn text() {
     use unicode_segmentation::UnicodeSegmentation;
 
-    let hyphenate_text = |text : &str | -> String {
+    let hyphenate_text = |text : &str| -> String {
         text.split_word_bounds()
             .flat_map(|word| EN_US.hyphenate(word).into_iter())
             .collect()
@@ -172,12 +172,11 @@ fn text() {
     let expect1 = "ever-burn-ing sul-phur un-con-sumed";
     let seg1 = hyphenate_text(t1);
     assert_eq!(seg1, expect1);
-
 }
 
 #[test]
 fn bounded_exception() {
-    let e = "anisotropic";  // an-iso-trop-ic, by exception
+    let e = "anisotropic"; // an-iso-trop-ic, by exception
 
     let bounded = EN_US.exception(e);
     let unbounded = EN_US.exception_within(e, (0, e.len()));

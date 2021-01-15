@@ -36,15 +36,16 @@ valid breaks. Thus, having matched these patterns, the dictionary will
 offer "fir·kin" as a valid hyphenation.
 */
 
-use hyphenation_commons::dictionary::*;
 use hyphenation_commons::dictionary::extended::*;
+use hyphenation_commons::dictionary::*;
 
 
-/// Methods to evaluate each index in a string as an opportunity for hyphenation.
+/// Methods to evaluate each index in a string as an opportunity for
+/// hyphenation.
 pub trait Score<'d> {
-    /// A value assigned to each index — which is to say, to each potential break
-    /// between letters — to determine whether the string can be broken at that
-    /// index.
+    /// A value assigned to each index — which is to say, to each potential
+    /// break between letters — to determine whether the string can be
+    /// broken at that index.
     type Value;
 
     /// Generate a word's hyphenation score, from which opportunities may be
@@ -61,7 +62,8 @@ pub trait Score<'d> {
 impl<'d> Score<'d> for Standard {
     type Value = u8;
 
-    #[inline] fn denotes_opportunity(v : Self::Value) -> bool { v % 2 != 0 }
+    #[inline]
+    fn denotes_opportunity(v : Self::Value) -> bool { v % 2 != 0 }
 
     fn score(&'d self, word : &str) -> Vec<u8> {
         let match_str = [".", word, "."].concat();
@@ -69,7 +71,7 @@ impl<'d> Score<'d> for Standard {
         let mut values : Vec<u8> = vec![0; hyphenable_length.saturating_sub(1)];
 
         for i in 0 .. match_str.len() - 1 {
-            let substring = &match_str.as_bytes()[i..];
+            let substring = &match_str.as_bytes()[i ..];
             for tally in self.prefix_tallies(substring) {
                 for &Locus { index, value } in tally {
                     let k = i + index as usize;
@@ -81,13 +83,13 @@ impl<'d> Score<'d> for Standard {
         }
         values
     }
-
 }
 
 impl<'d> Score<'d> for Extended {
     type Value = (u8, Option<&'d Subregion>);
 
-    #[inline] fn denotes_opportunity((v, _) : Self::Value) -> bool { v % 2 != 0 }
+    #[inline]
+    fn denotes_opportunity((v, _) : Self::Value) -> bool { v % 2 != 0 }
 
     fn score(&'d self, word : &str) -> Vec<Self::Value> {
         let match_str = [".", word, "."].concat();

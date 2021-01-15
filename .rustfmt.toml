@@ -1,0 +1,12 @@
+unstable_features = true
+
+blank_lines_upper_bound = 4
+fn_single_line = true
+indent_style = "Visual"
+inline_attribute_width = 60
+overflow_delimited_expr = true
+space_before_colon = true
+spaces_around_ranges = true
+struct_field_align_threshold = 32
+struct_lit_width = 32
+wrap_comments = true

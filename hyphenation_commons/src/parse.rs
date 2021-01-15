@@ -1,17 +1,19 @@
 //! Pattern and exception parsing.
 
-use dictionary::*;
 use dictionary::extended::{self as ext, Subregion};
+use dictionary::*;
 
 // TODO: make parsing fallible
 pub trait Parse {
-    type Tally : Eq;
+    type Tally: Eq;
 
     fn value(char) -> Option<u8>;
     fn tally(&str) -> Self::Tally;
 
     fn alphabetical(s : &str) -> String {
-        s.chars().filter(|c| Self::value(c.clone()) == None).collect()
+        s.chars()
+         .filter(|c| Self::value(c.clone()) == None)
+         .collect()
     }
 
     fn pair<N>(str_klp : &str, normalize : N) -> (String, Self::Tally)
@@ -25,15 +27,17 @@ pub trait Parse {
 impl<'a> Parse for Patterns {
     type Tally = Vec<Locus>;
 
-    #[inline] fn value(c : char) -> Option<u8> { c.to_digit(10).map(|n| n as u8) }
+    #[inline]
+    fn value(c : char) -> Option<u8> { c.to_digit(10).map(|n| n as u8) }
 
     fn tally(pattern : &str) -> Self::Tally {
         pattern.bytes()
-            .enumerate()
-            .filter_map(|(i, b)| Self::value(b as char).map(|v| (i, v)))
-            .enumerate()
-            .map(|(j, (i, v))| Locus { index : (i - j) as u8, value : v })
-            .collect()
+               .enumerate()
+               .filter_map(|(i, b)| Self::value(b as char).map(|v| (i, v)))
+               .enumerate()
+               .map(|(j, (i, v))| Locus { index : (i - j) as u8,
+                                          value : v, })
+               .collect()
     }
 }
 
@@ -44,29 +48,30 @@ impl<'a> Parse for Exceptions {
     fn value(c : char) -> Option<u8> {
         match c {
             '-' => Some(2),
-            _   => None
+            _ => None,
         }
     }
 
     fn tally(exception : &str) -> Self::Tally {
         exception.bytes()
-            .enumerate()
-            .filter_map(|(i, b)| Self::value(b as char).map(|_| i))
-            .enumerate()
-            .map(|(j, i)| i - j)
-            .collect()
+                 .enumerate()
+                 .filter_map(|(i, b)| Self::value(b as char).map(|_| i))
+                 .enumerate()
+                 .map(|(j, i)| i - j)
+                 .collect()
     }
 }
 
 impl<'a> Parse for ext::Patterns {
     type Tally = ext::Tally;
 
-    #[inline] fn value(c : char) -> Option<u8> { c.to_digit(10).map(|n| n as u8) }
+    #[inline]
+    fn value(c : char) -> Option<u8> { c.to_digit(10).map(|n| n as u8) }
 
     fn alphabetical(s : &str) -> String {
         match s.find('/') {
             None => Patterns::alphabetical(s),
-            Some(i) => Patterns::alphabetical(&s[.. i])
+            Some(i) => Patterns::alphabetical(&s[.. i]),
         }
     }
 
@@ -75,10 +80,8 @@ impl<'a> Parse for ext::Patterns {
 
         // TODO: refactor
         match pattern.find('/') {
-            None => ext::Tally {
-                standard : Patterns::tally(pattern),
-                subregion : None,
-            },
+            None => ext::Tally { standard :  Patterns::tally(pattern),
+                                 subregion : None, },
             Some(i) => {
                 // Exoneration: we unwrap liberally within this match arm, since failure
                 // would denote a malformed pattern.
@@ -92,10 +95,13 @@ impl<'a> Parse for ext::Patterns {
 
                 let dot_offset = if standard.starts_with('.') { 1 } else { 0 };
                 let (chars_to_op, span) = {
-                    let v : Vec<_> =
-                        sub_idxs.split(',').map(|s| usize::from_str(s).expect(err)).collect();
+                    let v : Vec<_> = sub_idxs.split(',')
+                                             .map(|s| usize::from_str(s).expect(err))
+                                             .collect();
 
-                    assert!(v.len() == 2, "Malformed extended hyphenation pattern: {}", pattern);
+                    assert!(v.len() == 2,
+                            "Malformed extended hyphenation pattern: {}",
+                            pattern);
                     (v[0] + dot_offset, v[1])
                 };
 
@@ -105,18 +111,28 @@ impl<'a> Parse for ext::Patterns {
                 // Németh always starts the subregion at the character immediately preceding
                 // the opportunity.
                 let chars_to_start = chars_to_op.saturating_sub(1);
-                let start = alphabetical.char_indices().nth(chars_to_start).expect(err).0;
-                let end = alphabetical.char_indices().nth(chars_to_start + span).expect(err).0;
+                let start = alphabetical.char_indices()
+                                        .nth(chars_to_start)
+                                        .expect(err)
+                                        .0;
+                let end = alphabetical.char_indices()
+                                      .nth(chars_to_start + span)
+                                      .expect(err)
+                                      .0;
                 let index = alphabetical.char_indices().nth(chars_to_op).expect(err).0 as u8;
                 let (left, right) = (index as usize - start, end - index as usize);
-                let value = tally.iter().find(|&&locus| locus.index == index)
-                                        .map(|&locus| locus.value).expect(err);
+                let value = tally.iter()
+                                 .find(|&&locus| locus.index == index)
+                                 .map(|&locus| locus.value)
+                                 .expect(err);
 
-                ext::Tally {
-                    standard : tally,
-                    subregion : ( Locus { index, value }
-                                , Subregion { left, right, substitution, breakpoint } ).into()
-                }
+                ext::Tally { standard :  tally,
+                             subregion : (Locus { index, value },
+                                          Subregion { left,
+                                                      right,
+                                                      substitution,
+                                                      breakpoint })
+                                                                   .into(), }
             }
         }
     }

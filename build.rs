@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
+#[cfg(feature = "embed_all")] extern crate pocket_resources;
 #[cfg(any(feature = "nfc", feature = "nfd", feature = "nfkc", feature = "nfkd"))]
 extern crate unicode_normalization;
-#[cfg(feature = "embed_all")] extern crate pocket_resources;
 
 extern crate bincode;
 extern crate fst;
@@ -18,13 +18,13 @@ use std::fmt;
 use std::fs::{self, File};
 use std::io;
 use std::io::prelude::*;
-use std::iter::{FromIterator};
+use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 
-use hyphenation_commons::dictionary::{self, *};
 use hyphenation_commons::dictionary::extended as ext;
-use hyphenation_commons::Language::{self, *};
+use hyphenation_commons::dictionary::{self, *};
 use hyphenation_commons::parse::Parse;
+use hyphenation_commons::Language::{self, *};
 
 
 // Configuration of exclusive optional features
@@ -44,36 +44,43 @@ mod configuration {
     #[cfg(any(feature = "nfc", feature = "nfd", feature = "nfkc", feature = "nfkd"))]
     use unicode_normalization::*;
 
-    #[cfg(feature = "nfc")]  pub fn normalize(s : &str) -> String { s.nfc().collect() }
-    #[cfg(feature = "nfd")]  pub fn normalize(s : &str) -> String { s.nfd().collect() }
-    #[cfg(feature = "nfkc")] pub fn normalize(s : &str) -> String { s.nfkc().collect() }
-    #[cfg(feature = "nfkd")] pub fn normalize(s : &str) -> String { s.nfkd().collect() }
+    #[cfg(feature = "nfc")]
+    pub fn normalize(s : &str) -> String { s.nfc().collect() }
+    #[cfg(feature = "nfd")]
+    pub fn normalize(s : &str) -> String { s.nfd().collect() }
+    #[cfg(feature = "nfkc")]
+    pub fn normalize(s : &str) -> String { s.nfkc().collect() }
+    #[cfg(feature = "nfkd")]
+    pub fn normalize(s : &str) -> String { s.nfkd().collect() }
 }
 
 
-trait TryFromIterator<Tally> : Sized {
+trait TryFromIterator<Tally>: Sized {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, Tally)>;
+        where I : IntoIterator<Item = (String, Tally)>;
 }
 
 impl TryFromIterator<<Patterns as Parse>::Tally> for Patterns {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)> {
-        Ok(Patterns::from_iter(iter) ?)
+        where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)>
+    {
+        Ok(Patterns::from_iter(iter)?)
     }
 }
 
 impl TryFromIterator<<Exceptions as Parse>::Tally> for Exceptions {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, <Exceptions as Parse>::Tally)> {
+        where I : IntoIterator<Item = (String, <Exceptions as Parse>::Tally)>
+    {
         Ok(Exceptions(HashMap::from_iter(iter)))
     }
 }
 
 impl TryFromIterator<<ext::Patterns as Parse>::Tally> for ext::Patterns {
     fn try_from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : IntoIterator<Item = (String, <ext::Patterns as Parse>::Tally)> {
-        Ok(ext::Patterns::from_iter(iter) ?)
+        where I : IntoIterator<Item = (String, <ext::Patterns as Parse>::Tally)>
+    {
+        Ok(ext::Patterns::from_iter(iter)?)
     }
 }
 
@@ -83,13 +90,13 @@ impl TryFromIterator<<ext::Patterns as Parse>::Tally> for ext::Patterns {
 #[derive(Clone, Debug)]
 struct Paths {
     source : PathBuf,
-    out : PathBuf
+    out :    PathBuf,
 }
 
 impl Paths {
     fn new() -> Result<Self, Error> {
-        let source = env::var("CARGO_MANIFEST_DIR").map(|p| PathBuf::from(p)) ?;
-        let out = env::var("OUT_DIR").map(|p| PathBuf::from(p)) ?;
+        let source = env::var("CARGO_MANIFEST_DIR").map(|p| PathBuf::from(p))?;
+        let out = env::var("OUT_DIR").map(|p| PathBuf::from(p))?;
 
         Ok(Paths { source, out })
     }
@@ -103,7 +110,8 @@ impl Paths {
     }
 
     fn place_dict(&self, lang : Language, suffix : &str) -> PathBuf {
-        self.place_item("dictionaries").join(Self::dict_name(lang, suffix))
+        self.place_item("dictionaries")
+            .join(Self::dict_name(lang, suffix))
     }
 
     fn dict_name(lang : Language, suffix : &str) -> String {
@@ -112,7 +120,7 @@ impl Paths {
 }
 
 
-trait Build : Sized + Parse + TryFromIterator<<Self as Parse>::Tally> {
+trait Build: Sized + Parse + TryFromIterator<<Self as Parse>::Tally> {
     fn suffix() -> &'static str;
 
     fn sourcepath(lang : Language, paths : &Paths) -> PathBuf {
@@ -120,28 +128,37 @@ trait Build : Sized + Parse + TryFromIterator<<Self as Parse>::Tally> {
     }
 
     fn build(lang : Language, paths : &Paths) -> Result<Self, Error> {
-        let file = File::open(Self::sourcepath(lang, paths)) ?;
+        let file = File::open(Self::sourcepath(lang, paths))?;
         let by_line = io::BufReader::new(file).lines();
-        let pairs : Vec<_> = by_line.map(|res| Self::pair(&res.unwrap(), normalize)).collect();
+        let pairs : Vec<_> = by_line.map(|res| Self::pair(&res.unwrap(), normalize))
+                                    .collect();
 
         Self::try_from_iter(pairs.into_iter())
     }
 }
 
-impl Build for Patterns   { fn suffix() -> &'static str { "pat" } }
-impl Build for Exceptions { fn suffix() -> &'static str { "hyp" } }
-impl Build for ext::Patterns { fn suffix() -> &'static str { "ext" } }
+impl Build for Patterns {
+    fn suffix() -> &'static str { "pat" }
+}
+impl Build for Exceptions {
+    fn suffix() -> &'static str { "hyp" }
+}
+impl Build for ext::Patterns {
+    fn suffix() -> &'static str { "ext" }
+}
 
 
-fn write<T>(item : &T, path : &Path) -> Result<(), Error> where T : ser::Serialize {
-    let mut buffer = File::create(&path).map(|f| io::BufWriter::new(f)) ?;
-    bin::serialize_into(&mut buffer, item) ?;
+fn write<T>(item : &T, path : &Path) -> Result<(), Error>
+    where T : ser::Serialize
+{
+    let mut buffer = File::create(&path).map(|f| io::BufWriter::new(f))?;
+    bin::serialize_into(&mut buffer, item)?;
     Ok(())
 }
 
 fn copy_dir(from : &Path, to : &Path) -> Result<(), Error> {
-    for entry in fs::read_dir(from) ? {
-        entry.and_then(|e| fs::copy(e.path(), to.join(e.file_name()))) ?;
+    for entry in fs::read_dir(from)? {
+        entry.and_then(|e| fs::copy(e.path(), to.join(e.file_name())))?;
     }
 
     Ok(())
@@ -157,42 +174,114 @@ fn main() {
     let dict_out = paths.place_item(dict_folder);
 
     let _ext_langs = vec![Catalan, Hungarian];
-    let _std_langs =
-        vec![ Afrikaans, Armenian, Assamese, Basque, Belarusian, Bengali, Bulgarian, Catalan,
-              Chinese, Coptic, Croatian, Czech, Danish, Dutch, EnglishGB, EnglishUS, Esperanto,
-              Estonian, Ethiopic, Finnish, French, Friulan, Galician, Georgian, German1901,
-              German1996, GermanSwiss, GreekAncient, GreekMono, GreekPoly, Gujarati, Hindi,
-              Hungarian, Icelandic, Indonesian, Interlingua, Irish, Italian, Kannada, Kurmanji,
-              Latin, LatinClassic, LatinLiturgical, Latvian, Lithuanian, Macedonian, Malayalam,
-              Marathi, Mongolian, NorwegianBokmal, NorwegianNynorsk, Occitan, Oriya, Pali,
-              Panjabi, Piedmontese, Polish, Portuguese, Romanian, Romansh, Russian, Sanskrit,
-              SerbianCyrillic, SerbocroatianCyrillic, SerbocroatianLatin, SlavonicChurch, Slovak,
-              Slovenian, Spanish, Swedish, Tamil, Telugu, Thai, Turkish, Turkmen, Ukrainian,
-              Uppersorbian, Welsh ];
+    let _std_langs = vec![Afrikaans,
+                          Armenian,
+                          Assamese,
+                          Basque,
+                          Belarusian,
+                          Bengali,
+                          Bulgarian,
+                          Catalan,
+                          Chinese,
+                          Coptic,
+                          Croatian,
+                          Czech,
+                          Danish,
+                          Dutch,
+                          EnglishGB,
+                          EnglishUS,
+                          Esperanto,
+                          Estonian,
+                          Ethiopic,
+                          Finnish,
+                          French,
+                          Friulan,
+                          Galician,
+                          Georgian,
+                          German1901,
+                          German1996,
+                          GermanSwiss,
+                          GreekAncient,
+                          GreekMono,
+                          GreekPoly,
+                          Gujarati,
+                          Hindi,
+                          Hungarian,
+                          Icelandic,
+                          Indonesian,
+                          Interlingua,
+                          Irish,
+                          Italian,
+                          Kannada,
+                          Kurmanji,
+                          Latin,
+                          LatinClassic,
+                          LatinLiturgical,
+                          Latvian,
+                          Lithuanian,
+                          Macedonian,
+                          Malayalam,
+                          Marathi,
+                          Mongolian,
+                          NorwegianBokmal,
+                          NorwegianNynorsk,
+                          Occitan,
+                          Oriya,
+                          Pali,
+                          Panjabi,
+                          Piedmontese,
+                          Polish,
+                          Portuguese,
+                          Romanian,
+                          Romansh,
+                          Russian,
+                          Sanskrit,
+                          SerbianCyrillic,
+                          SerbocroatianCyrillic,
+                          SerbocroatianLatin,
+                          SlavonicChurch,
+                          Slovak,
+                          Slovenian,
+                          Spanish,
+                          Swedish,
+                          Tamil,
+                          Telugu,
+                          Thai,
+                          Turkish,
+                          Turkmen,
+                          Ukrainian,
+                          Uppersorbian,
+                          Welsh];
 
     fs::create_dir_all(&dict_out).unwrap();
 
     // If no dictionary is to be rebuilt, copy the bundled ones into the `target`
     // folder.
-    #[cfg(not(any(feature = "build_dictionaries", feature = "nfc", feature = "nfd",
-                  feature = "nfkc", feature = "nfkd")))]
+    #[cfg(not(any(feature = "build_dictionaries",
+                  feature = "nfc",
+                  feature = "nfd",
+                  feature = "nfkc",
+                  feature = "nfkd")))]
     {
         copy_dir(_dict_source.as_path(), dict_out.as_path()).unwrap();
     }
 
     // Otherwise, process the bundled patterns into new dictionaries and similarly
     // bundle them.
-    #[cfg(any(feature = "build_dictionaries", feature = "nfc", feature = "nfd",
-              feature = "nfkc", feature = "nfkd"))]
+    #[cfg(any(feature = "build_dictionaries",
+              feature = "nfc",
+              feature = "nfd",
+              feature = "nfkc",
+              feature = "nfkd"))]
     {
         println!("Building `Standard` dictionaries:");
         for &language in _std_langs.iter() {
             println!("  - {:?}", language);
-            let builder = Builder {
-                language,
-                patterns : Patterns::build(language, &paths).unwrap(),
-                exceptions : Exceptions::build(language, &paths).unwrap_or(Exceptions::default())
-            };
+            let builder =
+                Builder { language,
+                          patterns : Patterns::build(language, &paths).unwrap(),
+                          exceptions:
+                              Exceptions::build(language, &paths).unwrap_or(Exceptions::default()) };
 
             let dict = Standard::from(builder);
             write(&dict, &paths.place_dict(language, _std_out)).unwrap();
@@ -201,28 +290,31 @@ fn main() {
         println!("Building `Extended` dictionaries:");
         for &language in _ext_langs.iter() {
             println!("  - {:?}", language);
-            let builder = ext::Builder {
-                language,
-                patterns : ext::Patterns::build(language, &paths).unwrap(),
-                exceptions : ext::Exceptions::default()
-            };
+            let builder = ext::Builder { language,
+                                         patterns:
+                                             ext::Patterns::build(language, &paths).unwrap(),
+                                         exceptions : ext::Exceptions::default() };
 
             let dict = ext::Extended::from(builder);
             write(&dict, &paths.place_dict(language, _ext_out)).unwrap();
         }
     }
 
-    #[cfg(all(feature = "embed_en-us", not(feature = "embed_all")))] {
+    #[cfg(all(feature = "embed_en-us", not(feature = "embed_all")))]
+    {
         use std::iter;
 
         let dict = (&dict_folder, Paths::dict_name(EnglishUS, _std_out));
         pocket_resources::package(iter::once(&dict)).unwrap();
     }
 
-    #[cfg(feature = "embed_all")] {
+    #[cfg(feature = "embed_all")]
+    {
         // HEED: `pocket_resources` requires paths to be relative
-        let std_p = _std_langs.iter().map(|&l| (&dict_folder, Paths::dict_name(l, _std_out)));
-        let ext_p = _ext_langs.iter().map(|&l| (&dict_folder, Paths::dict_name(l, _ext_out)));
+        let std_p = _std_langs.iter()
+                              .map(|&l| (&dict_folder, Paths::dict_name(l, _std_out)));
+        let ext_p = _ext_langs.iter()
+                              .map(|&l| (&dict_folder, Paths::dict_name(l, _ext_out)));
         let all_paths : Vec<_> = std_p.chain(ext_p).collect();
         pocket_resources::package(all_paths.iter()).unwrap();
     }
@@ -239,8 +331,7 @@ pub enum Error {
     Env(env::VarError),
     IO(io::Error),
     Serialization(bin::Error),
-    Resource
-    // TODO: Parsing
+    Resource, // TODO: Parsing
 }
 
 impl error::Error for Error {
@@ -262,7 +353,7 @@ impl fmt::Display for Error {
             Error::Env(ref e) => e.fmt(f),
             Error::IO(ref e) => e.fmt(f),
             Error::Serialization(ref e) => e.fmt(f),
-            Error::Resource => f.write_str("dictionary could not be embedded")
+            Error::Resource => f.write_str("dictionary could not be embedded"),
         }
     }
 }

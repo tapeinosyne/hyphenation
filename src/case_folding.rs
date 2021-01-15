@@ -45,7 +45,7 @@ use std::borrow::Cow::*;
 #[derive(Copy, Clone, Debug)]
 pub struct Shift {
     index : usize,
-    delta : isize
+    delta : isize,
 }
 
 /// The opportunity `i`, index-corrected for use in the original string.
@@ -55,9 +55,10 @@ pub fn realign(i : usize, shifts : &[Shift]) -> usize {
 
 /// The shift at index `i` in the refolded string.
 fn shift_at(i : usize, shifts : &[Shift]) -> isize {
-    shifts.iter().rev()
-        .find(|&&shift| i > shift.index)
-        .map_or(0, |&shift| shift.delta)
+    shifts.iter()
+          .rev()
+          .find(|&&shift| i > shift.index)
+          .map_or(0, |&shift| shift.delta)
 }
 
 fn shifts(word : &str) -> Vec<Shift> {
@@ -66,8 +67,10 @@ fn shifts(word : &str) -> Vec<Shift> {
         .scan(0, |delta, (i, d)| {
             let index = i as isize + *delta;
             *delta += d;
-            Some(Shift { index : index as usize, delta : *delta })
-        }).collect()
+            Some(Shift { index : index as usize,
+                         delta : *delta, })
+        })
+        .collect()
 }
 
 
@@ -82,12 +85,14 @@ pub fn refold(original : &str) -> (Cow<str>, Vec<Shift>) {
         // it was present in the original word.
         if original.len() != lowercase.len() {
             (Owned(refold_lowercase(&lowercase)), shifts(original))
-        } else { (Owned(lowercase), vec![]) }
-    } else { (Borrowed(original), vec![]) }
+        } else {
+            (Owned(lowercase), vec![])
+        }
+    } else {
+        (Borrowed(original), vec![])
+    }
 }
 
 /// Substitute lowercase sequences that would interfere with hyphenation.
 /// Canonical equivalence is not necessarily preserved.
-fn refold_lowercase(lowercase : &str) -> String {
-    lowercase.replace("i\u{307}", "i")
-}
+fn refold_lowercase(lowercase : &str) -> String { lowercase.replace("i\u{307}", "i") }

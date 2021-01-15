@@ -60,70 +60,75 @@ Note that embedding significantly increases the size of the compiled artifact.
 [`from_path`]: trait.Load.html#method.from_path
 */
 
-#[cfg(any(feature = "embed_all", feature = "embed_en-us"))] use resources::ResourceId;
 use bincode as bin;
+#[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+use resources::ResourceId;
 use std::error;
 use std::fmt;
-use std::io;
 use std::fs::File;
+use std::io;
 use std::path::Path;
 use std::result;
 
+use hyphenation_commons::dictionary::{extended::Extended, Standard};
 use hyphenation_commons::Language;
-use hyphenation_commons::dictionary::{Standard, extended::Extended};
 
 
 /// Convenience methods for the retrieval of hyphenation dictionaries.
-pub trait Load : Sized {
+pub trait Load: Sized {
     /// Read and deserialize the dictionary at the given path, verifying that it
     /// belongs to the expected language.
     fn from_path<P>(lang : Language, path : P) -> Result<Self>
-    where P : AsRef<Path> {
-        let file = File::open(path) ?;
+        where P : AsRef<Path>
+    {
+        let file = File::open(path)?;
         Self::from_reader(lang, &mut io::BufReader::new(file))
     }
 
     /// Deserialize a dictionary from the provided reader, verifying that it
     /// belongs to the expected language.
     fn from_reader<R>(lang : Language, reader : &mut R) -> Result<Self>
-    where R : io::Read;
+        where R : io::Read;
 
     /// Deserialize a dictionary from the provided reader.
     fn any_from_reader<R>(reader : &mut R) -> Result<Self>
-    where R : io::Read;
+        where R : io::Read;
 
     #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
     /// Deserialize the embedded dictionary for the given language.
     fn from_embedded(lang : Language) -> Result<Self>;
-
 }
 
 macro_rules! impl_load {
     ($dict:ty, $suffix:expr) => {
         impl Load for $dict {
             fn from_reader<R>(lang : Language, reader : &mut R) -> Result<Self>
-            where R : io::Read {
-                let dict : Self = bin::deserialize_from(reader) ?;
+                where R : io::Read
+            {
+                let dict : Self = bin::deserialize_from(reader)?;
                 let (found, expected) = (dict.language(), lang);
                 if found != expected {
                     Err(Error::LanguageMismatch { expected, found })
-                } else { Ok(dict) }
+                } else {
+                    Ok(dict)
+                }
             }
 
             fn any_from_reader<R>(reader : &mut R) -> Result<Self>
-            where R : io::Read {
-                let dict : Self = bin::deserialize_from(reader) ?;
+                where R : io::Read
+            {
+                let dict : Self = bin::deserialize_from(reader)?;
                 Ok(dict)
             }
 
             #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
             fn from_embedded(lang : Language) -> Result<Self> {
-                let dict_bytes = retrieve_resource(lang.code(), $suffix) ?;
-                let dict = bin::deserialize(dict_bytes) ?;
+                let dict_bytes = retrieve_resource(lang.code(), $suffix)?;
+                let dict = bin::deserialize(dict_bytes)?;
                 Ok(dict)
             }
         }
-    }
+    };
 }
 
 impl_load! { Standard, "standard" }
@@ -136,7 +141,7 @@ fn retrieve_resource<'a>(code : &str, suffix : &str) -> Result<&'a [u8]> {
     let res : Option<ResourceId> = ResourceId::from_name(&name);
     match res {
         Some(data) => Ok(data.load()),
-        None => Err(Error::Resource)
+        None => Err(Error::Resource),
     }
 }
 
@@ -151,9 +156,12 @@ pub enum Error {
     /// The dictionary could not be read.
     IO(io::Error),
     /// The loaded dictionary is for the wrong language.
-    LanguageMismatch { expected : Language, found : Language },
+    LanguageMismatch {
+        expected : Language,
+        found :    Language,
+    },
     /// The embedded dictionary could not be retrieved.
-    Resource
+    Resource,
 }
 
 impl error::Error for Error {
@@ -161,7 +169,7 @@ impl error::Error for Error {
         match *self {
             Error::Deserialization(ref e) => Some(e),
             Error::IO(ref e) => Some(e),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -171,11 +179,14 @@ impl fmt::Display for Error {
         match *self {
             Error::Deserialization(ref e) => e.fmt(f),
             Error::IO(ref e) => e.fmt(f),
-            Error::LanguageMismatch { expected, found } =>
-                write!(f, "\
+            Error::LanguageMismatch { expected, found } => write!(
+                                                                  f,
+                                                                  "\
 Language mismatch: attempted to load a dictionary for `{}`, but found
-a dictionary for `{}` instead.", expected, found),
-            Error::Resource => f.write_str("the embedded dictionary could not be retrieved")
+a dictionary for `{}` instead.",
+                                                                  expected, found
+            ),
+            Error::Resource => f.write_str("the embedded dictionary could not be retrieved"),
         }
     }
 }

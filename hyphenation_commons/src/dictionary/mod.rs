@@ -3,33 +3,34 @@
 pub mod extended;
 mod trie;
 
-use std::hash::Hash;
 use std::collections::HashMap;
+use std::hash::Hash;
 
-use language::Language;
 use dictionary::trie::PrefixMatches;
-use parse::Parse;
 pub use dictionary::trie::{Error, Trie};
+use language::Language;
+use parse::Parse;
 
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Locus {
     pub index : u8,
-    pub value : u8
+    pub value : u8,
 }
 
 /// A trie mapping hyphenation patterns to their tallies.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Patterns {
-    tallies : Vec<Vec<Locus>>,
-    automaton : Trie
+    tallies :   Vec<Vec<Locus>>,
+    automaton : Trie,
 }
 
 impl Patterns {
-    pub fn from_iter<I>(iter: I) -> Result<Self, trie::Error>
-    where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)> {
+    pub fn from_iter<I>(iter : I) -> Result<Self, trie::Error>
+        where I : IntoIterator<Item = (String, <Patterns as Parse>::Tally)>
+    {
         let (kvs, tallies) = uniques(iter.into_iter());
-        let automaton = Trie::from_iter(kvs.into_iter()) ?;
+        let automaton = Trie::from_iter(kvs.into_iter())?;
         Ok(Patterns { tallies, automaton })
     }
 }
@@ -44,12 +45,12 @@ pub struct Exceptions(pub HashMap<String, Vec<usize>>);
 /// and the character boundaries for hyphenation.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Standard {
-    language : Language,
-    patterns : Patterns,
+    language :       Language,
+    patterns :       Patterns,
     pub exceptions : Exceptions,
-    /// The minimum number of `char`s from the start and end of a word where breaks
-    /// may not occur.
-    pub minima : (usize, usize)
+    /// The minimum number of `char`s from the start and end of a word where
+    /// breaks may not occur.
+    pub minima :     (usize, usize),
 }
 
 
@@ -57,26 +58,25 @@ impl Standard {
     /// The language for which this dictionary can provide hyphenation.
     pub fn language(&self) -> Language { self.language }
 
-    /// An iterator over the tallies associated to all prefixes of the query, including
-    /// the query itself.
+    /// An iterator over the tallies associated to all prefixes of the query,
+    /// including the query itself.
     pub fn prefix_tallies<'f, 'q>(&'f self, query : &'q [u8]) -> PrefixTallies<'f, 'q, Vec<Locus>> {
-        PrefixTallies {
-            matches : self.patterns.automaton.get_prefixes(query),
-            tallies : &self.patterns.tallies
-        }
+        PrefixTallies { matches : self.patterns.automaton.get_prefixes(query),
+                        tallies : &self.patterns.tallies, }
     }
 }
 
 pub struct PrefixTallies<'f, 'q, T> {
     tallies : &'f [T],
-    matches : PrefixMatches<'f, 'q>
+    matches : PrefixMatches<'f, 'q>,
 }
 
 impl<'f, 'q, T> Iterator for PrefixTallies<'f, 'q, T> {
     type Item = &'f T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.matches.next()
+        self.matches
+            .next()
             .and_then(|i| self.tallies.get(i as usize))
     }
 }
@@ -86,26 +86,24 @@ impl<'f, 'q, T> Iterator for PrefixTallies<'f, 'q, T> {
 /// dictionary.
 #[derive(Debug)]
 pub struct Builder {
-    pub language : Language,
-    pub patterns : Patterns,
-    pub exceptions : Exceptions
+    pub language :   Language,
+    pub patterns :   Patterns,
+    pub exceptions : Exceptions,
 }
 
 impl From<Builder> for Standard {
     fn from(b : Builder) -> Standard {
-         Standard {
-            language : b.language,
-            patterns : b.patterns,
-            exceptions : b.exceptions,
-            minima : b.language.minima()
-        }
+        Standard { language :   b.language,
+                   patterns :   b.patterns,
+                   exceptions : b.exceptions,
+                   minima :     b.language.minima(), }
     }
 }
 
 
 pub fn uniques<I, T>(iter : I) -> (Vec<(String, u64)>, Vec<T>)
-where T : Eq + Clone + Hash
-    , I : Iterator<Item = (String, T)>
+    where T : Eq + Clone + Hash,
+          I : Iterator<Item = (String, T)>
 {
     let mut pairs = Vec::new();
     let mut tally_ids = HashMap::new();

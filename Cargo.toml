@@ -13,8 +13,15 @@ description = "Knuth-Liang hyphenation for a variety of languages"
 keywords = ["text", "typesetting"]
 
 
-include = ["**/*.rs", "**/Cargo.toml", "dictionaries/*", "patterns/*",
-           "README.md", "CHANGELOG.md", "LICENSE*"]
+include = [
+  "**/*.rs",
+  "**/Cargo.toml",
+  "dictionaries/*",
+  "patterns/*",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE*",
+]
 build = "build.rs"
 
 

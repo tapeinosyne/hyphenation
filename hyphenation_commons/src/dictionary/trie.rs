@@ -1,7 +1,7 @@
-use fst::Map;
 use fst::raw;
+use fst::Map;
+use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::ser::{Serialize, Serializer};
-use serde::de::{self, Visitor, Deserialize, Deserializer};
 
 use std::convert::From;
 use std::error;
@@ -16,33 +16,32 @@ impl Trie {
     pub fn as_bytes(&self) -> &[u8] { self.0.as_fst().as_bytes() }
 
     pub fn from_bytes(bs : Vec<u8>) -> Result<Self, Error> {
-        let map = Map::new(bs) ?;
+        let map = Map::new(bs)?;
         Ok(Trie(map))
     }
 
     pub fn from_iter<I>(iter : I) -> Result<Self, Error>
-    where I : Iterator<Item = (String, u64)> {
-        let m = fst::Map::from_iter(iter) ?;
+        where I : Iterator<Item = (String, u64)>
+    {
+        let m = fst::Map::from_iter(iter)?;
         Ok(Trie(m))
     }
 
     pub fn get_prefixes<'f, 'q>(&'f self, query : &'q [u8]) -> PrefixMatches<'f, 'q> {
         let fst = self.0.as_fst();
-        PrefixMatches {
-            fst,
-            node : fst.root(),
-            output : raw::Output::zero(),
-            query : query.iter()
-        }
+        PrefixMatches { fst,
+                        node : fst.root(),
+                        output : raw::Output::zero(),
+                        query : query.iter() }
     }
 }
 
 #[derive(Clone)]
 pub struct PrefixMatches<'f, 'q> {
-    fst : &'f raw::Fst<Vec<u8>>,
-    node : raw::Node<'f>,
+    fst :    &'f raw::Fst<Vec<u8>>,
+    node :   raw::Node<'f>,
     output : raw::Output,
-    query : slice::Iter<'q, u8>,
+    query :  slice::Iter<'q, u8>,
 }
 
 impl<'f, 'q> Iterator for PrefixMatches<'f, 'q> {
@@ -59,7 +58,7 @@ impl<'f, 'q> Iterator for PrefixMatches<'f, 'q> {
                     self.node = self.fst.node(t.addr);
                     if self.node.is_final() {
                         let final_output = self.output.cat(self.node.final_output());
-                        return Some(final_output.value())
+                        return Some(final_output.value());
                     }
                 }
             }
@@ -100,31 +99,36 @@ impl<'de> Visitor<'de> for FstVisitor {
     }
 
     fn visit_bytes<E>(self, bs : &[u8]) -> Result<Self::Value, E>
-    where E : de::Error {
+        where E : de::Error
+    {
         Trie::from_bytes(bs.to_vec()).map_err(E::custom)
     }
 
     fn visit_byte_buf<E>(self, bs : Vec<u8>) -> Result<Self::Value, E>
-    where E : de::Error {
+        where E : de::Error
+    {
         Trie::from_bytes(bs).map_err(E::custom)
     }
 
     fn visit_newtype_struct<D>(self, de : D) -> Result<Self::Value, D::Error>
-    where D : Deserializer<'de> {
+        where D : Deserializer<'de>
+    {
         de.deserialize_bytes(FstVisitor)
     }
 }
 
 impl Serialize for Trie {
     fn serialize<S>(&self, ser : S) -> Result<S::Ok, S::Error>
-    where S : Serializer {
+        where S : Serializer
+    {
         ser.serialize_newtype_struct(NOM_DE_SER, self.as_bytes())
     }
 }
 
 impl<'de> Deserialize<'de> for Trie {
     fn deserialize<D>(de : D) -> Result<Self, D::Error>
-    where D : Deserializer<'de> {
+        where D : Deserializer<'de>
+    {
         de.deserialize_newtype_struct(NOM_DE_SER, FstVisitor)
     }
 }
@@ -135,7 +139,8 @@ pub struct Error(pub fst::Error);
 
 impl fmt::Display for Error {
     fn fmt(&self, f : &mut fmt::Formatter<'_>) -> fmt::Result {
-        let message = format!("The dictionary's internal trie could not be built:\n{}", &self.0);
+        let message = format!("The dictionary's internal trie could not be built:\n{}",
+                              &self.0);
 
         f.write_str(&message)
     }

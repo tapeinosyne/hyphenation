@@ -88,21 +88,22 @@ hyphen on new lines).
 
 #![forbid(unsafe_code)]
 
-extern crate fst;
 extern crate bincode;
+extern crate fst;
 extern crate hyphenation_commons;
 
 
-#[cfg(any(feature = "embed_all", feature = "embed_en-us"))] mod resources;
 mod case_folding;
-pub mod hyphenator;
 pub mod extended;
+pub mod hyphenator;
 pub mod iter;
 pub mod load;
+#[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+mod resources;
 pub mod score;
 
-pub use hyphenation_commons::Language;
 pub use hyphenation_commons::dictionary::Standard;
+pub use hyphenation_commons::Language;
 pub use hyphenator::Hyphenator;
 pub use iter::Iter;
 pub use load::Load;
