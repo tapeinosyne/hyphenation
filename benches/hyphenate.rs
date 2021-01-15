@@ -1,8 +1,9 @@
-#[macro_use] extern crate lazy_static;
+extern crate once_cell;
 extern crate bincode;
 extern crate criterion;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use once_cell::sync::Lazy;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -26,19 +27,17 @@ fn fiat_ext(lang : Language) -> Extended {
     Extended::from_reader(lang, &mut BufReader::new(file)).unwrap()
 }
 
-lazy_static! {
-    static ref EN_US : Standard = fiat_std(EnglishUS);
-    static ref GRC : Standard = fiat_std(GreekAncient);
-    static ref HU_EXT : Extended = fiat_ext(Hungarian);
-    static ref HU_STD : Standard = fiat_std(Hungarian);
-    static ref TR : Standard = fiat_std(Turkish);
+static EN_US : Lazy<Standard> = Lazy::new(|| fiat_std(EnglishUS));
+static GRC : Lazy<Standard> = Lazy::new(|| fiat_std(GreekAncient));
+static HU_EXT : Lazy<Extended> = Lazy::new(|| fiat_ext(Hungarian));
+static HU_STD : Lazy<Standard> = Lazy::new(|| fiat_std(Hungarian));
+static TR : Lazy<Standard> = Lazy::new(|| fiat_std(Turkish));
+static WORDS : Lazy<Vec<String>> = Lazy::new(|| {
+    let file = File::open(Path::new("/usr/share/dict/words")).unwrap();
+    let octavate = BufReader::new(file).lines().map(|l| l.unwrap()).step_by(8);
+    octavate.collect()
+});
 
-    static ref WORDS : Vec<String> = {
-        let file = File::open(Path::new("/usr/share/dict/words")).unwrap();
-        let octavate = BufReader::new(file).lines().map(|l| l.unwrap()).step_by(8);
-        octavate.collect()
-    };
-}
 
 const OVERLONG_EN_US : &'static str =
  "Lopadotemachoselachogaleokranioleipsanodrimhypotrimmatosilphiokarabomelitokatakechymenokichlepik\
@@ -50,7 +49,7 @@ const OVERLONG_GRC : &'static str =
 
 
 fn dictionary_opportunities_en_us(c : &mut Criterion) {
-    lazy_static::initialize(&EN_US);
+    Lazy::force(&EN_US);
     c.bench_function("dictionary, en-US", |b| {
          b.iter(|| {
               for w in WORDS.iter() {
@@ -61,7 +60,7 @@ fn dictionary_opportunities_en_us(c : &mut Criterion) {
 }
 
 fn opportunities_en_us(c : &mut Criterion) {
-    lazy_static::initialize(&EN_US);
+    Lazy::force(&EN_US);
     let w = "antidisestablishmentarianism";
     c.bench_function("opportunities, en-US", |b| {
          b.iter(|| EN_US.opportunities(black_box(w)))
@@ -69,7 +68,7 @@ fn opportunities_en_us(c : &mut Criterion) {
 }
 
 fn hyphenate_en_us(c : &mut Criterion) {
-    lazy_static::initialize(&EN_US);
+    Lazy::force(&EN_US);
     let w = "antidisestablishmentarianism";
     c.bench_function("hyphenate, en-US", |b| {
          b.iter(|| EN_US.hyphenate(black_box(w)))
@@ -77,7 +76,7 @@ fn hyphenate_en_us(c : &mut Criterion) {
 }
 
 fn opportunities_hu_standard(c : &mut Criterion) {
-    lazy_static::initialize(&HU_STD);
+    Lazy::force(&HU_STD);
     let w = "asszonnyal";
     c.bench_function("opportunities, HU std", |b| {
          b.iter(|| HU_STD.opportunities(black_box(w)))
@@ -85,7 +84,7 @@ fn opportunities_hu_standard(c : &mut Criterion) {
 }
 
 fn opportunities_hu_extended(c : &mut Criterion) {
-    lazy_static::initialize(&HU_EXT);
+    Lazy::force(&HU_EXT);
     let w = "asszonnyal";
     c.bench_function("opportunities, HU ext", |b| {
          b.iter(|| HU_EXT.opportunities(black_box(w)))
@@ -93,7 +92,7 @@ fn opportunities_hu_extended(c : &mut Criterion) {
 }
 
 fn segments_hu_standard(c : &mut Criterion) {
-    lazy_static::initialize(&HU_STD);
+    Lazy::force(&HU_STD);
     let w = "asszonnyal";
     c.bench_function("segments, HU std", |b| {
          b.iter(|| {
@@ -105,7 +104,7 @@ fn segments_hu_standard(c : &mut Criterion) {
 }
 
 fn segments_hu_extended(c : &mut Criterion) {
-    lazy_static::initialize(&HU_EXT);
+    Lazy::force(&HU_EXT);
     let w = "asszonnyal";
     c.bench_function("segments, HU ext", |b| {
          b.iter(|| {
@@ -117,7 +116,7 @@ fn segments_hu_extended(c : &mut Criterion) {
 }
 
 fn special_casing_ignored(c : &mut Criterion) {
-    lazy_static::initialize(&TR);
+    Lazy::force(&TR);
     let w = "İLGİNÇ";
     c.bench_function("special casing, ignored", |b| {
          b.iter(|| TR.opportunities(black_box(w)))
@@ -125,22 +124,22 @@ fn special_casing_ignored(c : &mut Criterion) {
 }
 
 fn special_casing_handled(c : &mut Criterion) {
-    lazy_static::initialize(&TR);
+    Lazy::force(&TR);
     let w = "İLGİNÇ";
     c.bench_function("special casing, handled", |b| {
          b.iter(|| TR.hyphenate(black_box(w)).breaks)
-    });
+     });
 }
 
 fn opportunities_en_us_overlong(c : &mut Criterion) {
-    lazy_static::initialize(&EN_US);
+    Lazy::force(&EN_US);
     c.bench_function("overlong, en-US", |b| {
          b.iter(|| EN_US.opportunities(black_box(OVERLONG_EN_US)))
      });
 }
 
 fn opportunities_grc_overlong(c : &mut Criterion) {
-    lazy_static::initialize(&EN_US);
+    Lazy::force(&EN_US);
     c.bench_function("overlong, GRC", |b| {
          b.iter(|| GRC.opportunities(black_box(OVERLONG_GRC)))
      });

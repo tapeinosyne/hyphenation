@@ -1,10 +1,12 @@
-#[macro_use] extern crate lazy_static;
+extern crate once_cell;
 extern crate quickcheck;
 extern crate unicode_segmentation;
 
 use std::fs::File;
-use std::io::{BufReader};
-use std::path::{Path};
+use std::io::BufReader;
+use std::path::Path;
+
+use once_cell::sync::Lazy;
 use quickcheck::{quickcheck, TestResult};
 
 extern crate hyphenation;
@@ -26,11 +28,9 @@ fn fiat_ext(lang : Language) -> Extended {
     Extended::from_reader(lang, &mut BufReader::new(file)).unwrap()
 }
 
-lazy_static! {
-    static ref EN_US : Standard = fiat_std(EnglishUS);
-    static ref HU : Extended = fiat_ext(Hungarian);
-    static ref TR : Standard = fiat_std(Turkish);
-}
+static EN_US : Lazy<Standard> = Lazy::new(|| fiat_std(EnglishUS));
+static HU : Lazy<Extended> = Lazy::new(|| fiat_ext(Hungarian));
+static TR : Lazy<Standard> = Lazy::new(|| fiat_std(Turkish));
 
 
 #[test]
