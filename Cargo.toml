@@ -1,6 +1,7 @@
 [package]
 name = "hyphenation"
 version = "0.8.0"
+edition = "2018"
 
 authors = ["Andrew <andrew@banausia.com>"]
 license = "Apache-2.0/MIT"

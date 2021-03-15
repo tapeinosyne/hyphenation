@@ -7,8 +7,8 @@ use std::iter::{Cloned, ExactSizeIterator, IntoIterator};
 use std::slice;
 use std::vec;
 
-use extended::*;
-use hyphenator::*;
+use crate::extended::*;
+use crate::hyphenator::*;
 
 
 /// A hyphenating iterator that breaks text into segments delimited by word

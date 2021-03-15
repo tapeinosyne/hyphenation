@@ -4,10 +4,10 @@ Methods for hyphenation dictionaries
 
 use std::borrow::Cow;
 
-use case_folding::{realign, refold, Shift};
 use hyphenation_commons::dictionary::extended::*;
 use hyphenation_commons::dictionary::*;
-use score::Score;
+use crate::case_folding::{realign, refold, Shift};
+use crate::score::Score;
 
 
 /// The indices of soft hyphens (U+00AD) within the string, if any. Existing
