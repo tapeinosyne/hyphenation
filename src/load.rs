@@ -62,7 +62,7 @@ Note that embedding significantly increases the size of the compiled artifact.
 
 use bincode as bin;
 #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
-use resources::ResourceId;
+use crate::resources::ResourceId;
 use std::error;
 use std::fmt;
 use std::fs::File;
