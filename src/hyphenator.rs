@@ -138,7 +138,7 @@ struct Prepared<'t> {
     shifts : Vec<Shift>,
 }
 
-fn prepare<'t>(text : &'t str) -> Prepared<'t> {
+fn prepare(text : &str) -> Prepared<'_> {
     let (word, shifts) = refold(text);
     Prepared { word, shifts }
 }

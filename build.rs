@@ -95,8 +95,8 @@ struct Paths {
 
 impl Paths {
     fn new() -> Result<Self, Error> {
-        let source = env::var("CARGO_MANIFEST_DIR").map(|p| PathBuf::from(p))?;
-        let out = env::var("OUT_DIR").map(|p| PathBuf::from(p))?;
+        let source = env::var("CARGO_MANIFEST_DIR").map(PathBuf::from)?;
+        let out = env::var("OUT_DIR").map(PathBuf::from)?;
 
         Ok(Paths { source, out })
     }
@@ -130,8 +130,7 @@ trait Build: Sized + Parse + TryFromIterator<<Self as Parse>::Tally> {
     fn build(lang : Language, paths : &Paths) -> Result<Self, Error> {
         let file = File::open(Self::sourcepath(lang, paths))?;
         let by_line = io::BufReader::new(file).lines();
-        let pairs : Vec<_> = by_line.map(|res| Self::pair(&res.unwrap(), normalize))
-                                    .collect();
+        let pairs = by_line.map(|res| Self::pair(&res.unwrap(), normalize));
 
         Self::try_from_iter(pairs.into_iter())
     }
@@ -151,7 +150,7 @@ impl Build for ext::Patterns {
 fn write<T>(item : &T, path : &Path) -> Result<(), Error>
     where T : ser::Serialize
 {
-    let mut buffer = File::create(&path).map(|f| io::BufWriter::new(f))?;
+    let mut buffer = File::create(&path).map(io::BufWriter::new)?;
     bin::serialize_into(&mut buffer, item)?;
     Ok(())
 }

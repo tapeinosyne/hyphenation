@@ -89,7 +89,7 @@ Serialization
 #[derive(Copy, Clone, Debug)]
 struct FstVisitor;
 
-const NOM_DE_SER : &'static str = "Trie";
+const NOM_DE_SER : &str = "Trie";
 
 impl<'de> Visitor<'de> for FstVisitor {
     type Value = Trie;

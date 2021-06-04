@@ -62,7 +62,7 @@ fn shift_at(i : usize, shifts : &[Shift]) -> isize {
 }
 
 fn shifts(word : &str) -> Vec<Shift> {
-    word.match_indices("İ")
+    word.match_indices('İ')
         .map(|(i, _)| (i, -1))
         .scan(0, |delta, (i, d)| {
             let index = i as isize + *delta;

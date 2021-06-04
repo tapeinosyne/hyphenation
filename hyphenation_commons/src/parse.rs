@@ -7,12 +7,12 @@ use dictionary::*;
 pub trait Parse {
     type Tally: Eq;
 
-    fn value(char) -> Option<u8>;
-    fn tally(&str) -> Self::Tally;
+    fn value(v : char) -> Option<u8>;
+    fn tally(s : &str) -> Self::Tally;
 
     fn alphabetical(s : &str) -> String {
         s.chars()
-         .filter(|c| Self::value(c.clone()) == None)
+         .filter(|c| Self::value(*c) == None)
          .collect()
     }
 
