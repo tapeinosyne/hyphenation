@@ -175,6 +175,7 @@ fn main() {
 
     let _ext_langs = vec![Catalan, Hungarian];
     let _std_langs = vec![Afrikaans,
+                          Albanian,
                           Armenian,
                           Assamese,
                           Basque,
@@ -194,6 +195,7 @@ fn main() {
                           Estonian,
                           Ethiopic,
                           Finnish,
+                          FinnishScholastic,
                           French,
                           Friulan,
                           Galician,

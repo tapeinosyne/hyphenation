@@ -49,6 +49,7 @@ macro_rules! fiant_linguae {
 // discarding any which arise outside `char` boundaries.
 fiant_linguae! {
     Afrikaans,              (1, 2),     "af";
+    Albanian,               (2, 2),     "sq";
     Armenian,               (1, 2),     "hy";
     Assamese,               (1, 1),     "as";
     Basque,                 (2, 2),     "eu";
@@ -68,6 +69,7 @@ fiant_linguae! {
     Estonian,               (2, 3),     "et";
     Ethiopic,               (1, 1),     "mul-ethi";
     Finnish,                (2, 2),     "fi";
+    FinnishScholastic,      (1, 1),     "fi-x-school";
     French,                 (2, 3),     "fr";
     Friulan,                (2, 2),     "fur";
     Galician,               (2, 2),     "gl";
