@@ -1,5 +1,16 @@
 # `hyphenation`
 
+## 0.8.2
+
+- `unsafe` code is now forbidden crate-wide.
+- The `Standard` dictionary implements `Clone`.
+- Moved to Rust 2018.
+- Updated dependencies.
+
+
+## 0.8.1 — *yanked*
+
+
 ## 0.8.0
 
 Language support:

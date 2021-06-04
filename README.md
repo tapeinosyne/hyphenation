@@ -4,7 +4,7 @@ Hyphenation for UTF-8 strings in a variety of languages.
 
 ```toml
 [dependencies]
-hyphenation = "0.8.0"
+hyphenation = "0.8.2"
 ```
 
 Two strategies are available:
@@ -25,7 +25,7 @@ The `hyphenation` library relies on hyphenation dictionaries, external files tha
 
 ```toml
 [dependencies]
-hyphenation = { version = "0.8.0", features = ["embed_all"] }
+hyphenation = { version = "0.8.2", features = ["embed_all"] }
 ```
 
 The topmost module of `hyphenation` offers a small prelude that can be imported to expose the most common functionality.
@@ -102,7 +102,7 @@ Hyphenation patterns for languages affected by normalization occasionally cover 
 
 ```toml
 [dependencies.hyphenation]
-version = "0.8.0"
+version = "0.8.2"
 features = ["nfc"]
 ```
 
