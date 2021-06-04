@@ -1,5 +1,16 @@
 # `hyphenation`
 
+## 0.8.3
+
+Supported languages now include:
+  - Albanian (`sq`)
+  - Scholastic Finnish (`fi-x-school`)
+
+Updated source hyphenation patterns to CTAN version 2021-03-22:
+  - Updates and fixes to Macedonian (`mk`)
+  - Updates to German (`de-1901`, `de-1996`, `de-ch-1901`)
+
+
 ## 0.8.2
 
 - `unsafe` code is now forbidden crate-wide.
