@@ -1,6 +1,6 @@
 [package]
 name = "hyphenation"
-version = "0.8.3"
+version = "0.8.4-alpha.0"
 edition = "2018"
 
 authors = ["Andrew <andrew@banausia.com>"]
