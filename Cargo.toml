@@ -42,6 +42,8 @@ nfd = ["unicode-normalization"]
 nfkc = ["unicode-normalization"]
 nfkd = ["unicode-normalization"]
 
+[package.metadata.docs.rs]
+features = ["embed_en-us"]
 
 [workspace]
 members = ["hyphenation_commons"]
