@@ -28,6 +28,14 @@ macro_rules! fiant_linguae {
                     $( Language::$lang => $code, )*
                 }
             }
+
+            /// Try and construct a Language from a [BCP 47](https://tools.ietf.org/html/bcp47) tag.
+            pub fn try_from_code<T: AsRef<str>>(code: T) -> Option<Language> {
+                match code.as_ref() {
+                    $( $code => Some(Language::$lang), )*
+                    _ => None
+                }
+            }
         }
 
         impl fmt::Display for Language {
