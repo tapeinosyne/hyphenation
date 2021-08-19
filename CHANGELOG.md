@@ -1,5 +1,10 @@
 # `hyphenation`
 
+## 0.8.4
+
+Added a fallible `try_from_code` method to obtain a `hyphenation::Language` from [BCP 47](https://tools.ietf.org/html/bcp47) tags. (Contributed by [Tuomas Laakkonen](https://github.com/tuomas56))
+
+
 ## 0.8.3
 
 Supported languages now include:
