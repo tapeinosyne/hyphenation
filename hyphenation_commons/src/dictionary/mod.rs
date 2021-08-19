@@ -6,10 +6,10 @@ mod trie;
 use std::collections::HashMap;
 use std::hash::Hash;
 
-use dictionary::trie::PrefixMatches;
-pub use dictionary::trie::{Error, Trie};
-use language::Language;
-use parse::Parse;
+use crate::dictionary::trie::PrefixMatches;
+pub use crate::dictionary::trie::{Error, Trie};
+use crate::language::Language;
+use crate::parse::Parse;
 
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]

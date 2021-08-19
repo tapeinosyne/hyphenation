@@ -1,7 +1,7 @@
 //! Pattern and exception parsing.
 
-use dictionary::extended::{self as ext, Subregion};
-use dictionary::*;
+use crate::dictionary::extended::{self as ext, Subregion};
+use crate::dictionary::*;
 
 // TODO: make parsing fallible
 pub trait Parse {

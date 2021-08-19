@@ -6,10 +6,10 @@ Data structures for extended hyphenation[1].
 
 use std::collections::HashMap;
 
-use dictionary::trie::{self, Trie};
-use dictionary::{uniques, Locus, PrefixTallies};
-use language::Language;
-use parse::Parse;
+use crate::dictionary::trie::{self, Trie};
+use crate::dictionary::{uniques, Locus, PrefixTallies};
+use crate::language::Language;
+use crate::parse::Parse;
 
 /// The partial score carried by an extended hyphenation pattern.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
