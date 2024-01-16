@@ -67,6 +67,13 @@ let path_to_dict = "/path/to/en-us.bincode";
 let english_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
 ```
 
+Or to embed them individually with [`include_bytes!`](https://doc.rust-lang.org/std/macro.include_bytes.html):
+```rust
+let bytes = include_bytes!("./relative_path_to_dict_from_source_file/de-1996.standard.bincode");
+let mut cursor = std::io::Cursor::new(bytes);
+let german_de = Standard::any_from_reader(&mut cursor)?;
+```
+
 Dictionaries bundled with `hyphenation` can be retrieved from the build folder under `target`, and packaged with the final application as desired.
 
 ```bash
