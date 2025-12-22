@@ -57,6 +57,30 @@ let uppercase : Vec<_> = en_us.hyphenate("CAPITAL").into_iter().segments().colle
 assert_eq!(uppercase, vec!["CAP", "I", "TAL"]);
 ```
 
+If you only need a few languages, use `embed_selected` to keep the binary small:
+
+```toml
+[dependencies]
+hyphenation = { version = "0.8.3", features = ["embed_selected"] }
+```
+
+```toml
+# .cargo/config.toml
+[env]
+HYPHENATION_EMBED = "en-us,de-1996,hu.extended"
+```
+
+Entries without a suffix default to `standard`; use `.extended` for extended dictionaries.
+
+To shrink binaries further, add `embed_compressed` alongside any embedding feature:
+
+```toml
+[dependencies]
+hyphenation = { version = "0.8.3", features = ["embed_selected", "embed_compressed"] }
+```
+
+For just English (US), you can also use `embed_en-us`.
+
 
 ### Loading dictionaries at runtime
 

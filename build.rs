@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-#[cfg(feature = "embed_all")] extern crate pocket_resources;
+#[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
+extern crate pocket_resources;
 #[cfg(any(feature = "nfc", feature = "nfd", feature = "nfkc", feature = "nfkd"))]
 extern crate unicode_normalization;
 
@@ -26,6 +27,8 @@ use hyphenation_commons::dictionary::{self, *};
 use hyphenation_commons::parse::Parse;
 use hyphenation_commons::Language::{self, *};
 
+#[cfg(feature = "embed_compressed")]
+use flate2::{write::GzEncoder, Compression};
 
 // Configuration of exclusive optional features
 
@@ -161,6 +164,88 @@ fn copy_dir(from : &Path, to : &Path) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+#[cfg(feature = "embed_compressed")]
+fn relative_to(base : &Path, target : &Path) -> PathBuf {
+    use std::path::Component;
+
+    if let Ok(stripped) = target.strip_prefix(base) {
+        return stripped.to_path_buf();
+    }
+
+    let base_components : Vec<_> = base.components().collect();
+    let target_components : Vec<_> = target.components().collect();
+
+    if let (Some(Component::Prefix(b)), Some(Component::Prefix(t))) =
+        (base_components.first(), target_components.first())
+    {
+        if b != t {
+            panic!(
+                "embed_compressed requires OUT_DIR to be on the same drive as CARGO_MANIFEST_DIR"
+            );
+        }
+    }
+
+    let mut i = 0;
+    while i < base_components.len()
+          && i < target_components.len()
+          && base_components[i] == target_components[i]
+    {
+        i += 1;
+    }
+
+    let mut rel = PathBuf::new();
+    for _ in i..base_components.len() {
+        rel.push("..");
+    }
+    for comp in &target_components[i..] {
+        rel.push(comp.as_os_str());
+    }
+
+    rel
+}
+
+#[cfg(feature = "embed_compressed")]
+fn compress_dictionary(src : &Path, dst : &Path) -> io::Result<()> {
+    let mut input = File::open(src)?;
+    let output = File::create(dst)?;
+    let mut encoder = GzEncoder::new(output, Compression::best());
+    io::copy(&mut input, &mut encoder)?;
+    encoder.finish()?;
+    Ok(())
+}
+
+#[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
+fn package_dicts(_paths : &Paths, dict_folder : &Path, dict_out : &Path, dict_names : &[String]) {
+    #[cfg(feature = "embed_compressed")]
+    {
+        let compressed_out = dict_out.join("compressed");
+        fs::create_dir_all(&compressed_out).unwrap();
+
+        for name in dict_names {
+            println!("cargo:rerun-if-changed={}/{}", dict_folder.display(), name);
+            let src = dict_out.join(name);
+            let dst = compressed_out.join(name);
+            compress_dictionary(&src, &dst).unwrap();
+        }
+
+        let base_rel = relative_to(&_paths.source, &compressed_out);
+        let dicts : Vec<(PathBuf, PathBuf)> = dict_names
+            .iter()
+            .map(|name| (base_rel.clone(), PathBuf::from(name)))
+            .collect();
+        pocket_resources::package(dicts.iter()).unwrap();
+    }
+
+    #[cfg(not(feature = "embed_compressed"))]
+    {
+        let dicts : Vec<(PathBuf, PathBuf)> = dict_names
+            .iter()
+            .map(|name| (dict_folder.to_path_buf(), PathBuf::from(name)))
+            .collect();
+        pocket_resources::package(dicts.iter()).unwrap();
+    }
 }
 
 
@@ -301,23 +386,90 @@ fn main() {
         }
     }
 
-    #[cfg(all(feature = "embed_en-us", not(feature = "embed_all")))]
+    #[cfg(all(feature = "embed_en-us",
+              not(any(feature = "embed_all", feature = "embed_selected"))))]
     {
-        use std::iter;
+        let dicts = vec![Paths::dict_name(EnglishUS, _std_out)];
+        package_dicts(&paths, dict_folder, &dict_out, &dicts);
+    }
 
-        let dict = (&dict_folder, Paths::dict_name(EnglishUS, _std_out));
-        pocket_resources::package(iter::once(&dict)).unwrap();
+    #[cfg(all(feature = "embed_selected", not(feature = "embed_all")))]
+    {
+        use std::collections::HashSet;
+
+        println!("cargo:rerun-if-env-changed=HYPHENATION_EMBED");
+
+        let raw = env::var("HYPHENATION_EMBED").unwrap_or_else(|_| {
+            panic!(
+                "HYPHENATION_EMBED must be set when `embed_selected` is enabled \
+(example: \"en-us,de-1996,hu.extended\")"
+            );
+        });
+
+        let std_set: HashSet<Language> = _std_langs.iter().copied().collect();
+        let ext_set: HashSet<Language> = _ext_langs.iter().copied().collect();
+
+        let mut dicts = Vec::new();
+        for raw_item in raw.split(',') {
+            let item = raw_item.trim();
+            if item.is_empty() {
+                continue;
+            }
+
+            let (code_raw, suffix_raw) = match item.split_once('.') {
+                Some((code, suffix)) => (code, suffix),
+                None => (item, _std_out),
+            };
+            let code = code_raw.trim().to_ascii_lowercase();
+            let suffix = suffix_raw.trim().to_ascii_lowercase();
+
+            let lang = Language::try_from_code(&code).unwrap_or_else(|| {
+                panic!("Unknown language code `{}` in HYPHENATION_EMBED", code);
+            });
+
+            match suffix.as_str() {
+                "standard" => {
+                    if !std_set.contains(&lang) {
+                        panic!("No standard dictionary for `{}`", code);
+                    }
+                }
+                "extended" => {
+                    if !ext_set.contains(&lang) {
+                        panic!("No extended dictionary for `{}`", code);
+                    }
+                }
+                _ => {
+                    panic!(
+                        "Unknown dictionary kind `{}` in HYPHENATION_EMBED \
+(use `standard` or `extended`)",
+                        suffix
+                    );
+                }
+            }
+
+            dicts.push(Paths::dict_name(lang, suffix.as_str()));
+        }
+
+        if dicts.is_empty() {
+            panic!(
+                "HYPHENATION_EMBED was set but empty; provide a comma-separated list \
+like \"en-us,de-1996,hu.extended\""
+            );
+        }
+
+        dicts.sort();
+        dicts.dedup();
+        package_dicts(&paths, dict_folder, &dict_out, &dicts);
     }
 
     #[cfg(feature = "embed_all")]
     {
-        // HEED: `pocket_resources` requires paths to be relative
-        let std_p = _std_langs.iter()
-                              .map(|&l| (&dict_folder, Paths::dict_name(l, _std_out)));
-        let ext_p = _ext_langs.iter()
-                              .map(|&l| (&dict_folder, Paths::dict_name(l, _ext_out)));
-        let all_paths : Vec<_> = std_p.chain(ext_p).collect();
-        pocket_resources::package(all_paths.iter()).unwrap();
+        let mut dicts : Vec<String> = _std_langs
+            .iter()
+            .map(|&l| Paths::dict_name(l, _std_out))
+            .collect();
+        dicts.extend(_ext_langs.iter().map(|&l| Paths::dict_name(l, _ext_out)));
+        package_dicts(&paths, dict_folder, &dict_out, &dicts);
     }
 
     println!("cargo:rerun-if-changed=build.rs");

@@ -44,8 +44,11 @@ target/debug/build/hyphenation-33034db3e3b5f3ce/out/dictionaries
 ## Embedding
 
 Optionally, hyphenation dictionaries can be embedded in the compiled
-artifact by enabling the `embed_all` feature. Embedded dictionaries can be
-accessed directly from memory.
+artifact by enabling `embed_all` (all dictionaries), `embed_selected`
+(a comma-separated list via `HYPHENATION_EMBED`), or `embed_en-us`
+(English US only). Embedded dictionaries can be accessed directly from memory.
+Use `embed_compressed` alongside any embedding feature to gzip-compress
+the embedded dictionaries and reduce binary size.
 
 ```ignore
 use hyphenation::{Standard, Language, Load};
@@ -61,12 +64,16 @@ Note that embedding significantly increases the size of the compiled artifact.
 */
 
 use bincode as bin;
-#[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+#[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
 use crate::resources::ResourceId;
+#[cfg(feature = "embed_compressed")]
+use flate2::read::GzDecoder;
 use std::error;
 use std::fmt;
 use std::fs::File;
 use std::io;
+#[cfg(feature = "embed_compressed")]
+use std::io::Read;
 use std::path::Path;
 use std::result;
 
@@ -94,7 +101,7 @@ pub trait Load: Sized {
     fn any_from_reader<R>(reader : &mut R) -> Result<Self>
         where R : io::Read;
 
-    #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+    #[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
     /// Deserialize the embedded dictionary for the given language.
     fn from_embedded(lang : Language) -> Result<Self>;
 }
@@ -121,11 +128,20 @@ macro_rules! impl_load {
                 Ok(dict)
             }
 
-            #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+            #[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
             fn from_embedded(lang : Language) -> Result<Self> {
                 let dict_bytes = retrieve_resource(lang.code(), $suffix)?;
-                let dict = bin::deserialize(dict_bytes)?;
-                Ok(dict)
+                #[cfg(feature = "embed_compressed")]
+                {
+                    let dict_bytes = decompress(dict_bytes)?;
+                    let dict = bin::deserialize(&dict_bytes)?;
+                    Ok(dict)
+                }
+                #[cfg(not(feature = "embed_compressed"))]
+                {
+                    let dict = bin::deserialize(dict_bytes)?;
+                    Ok(dict)
+                }
             }
         }
     };
@@ -135,7 +151,7 @@ impl_load! { Standard, "standard" }
 impl_load! { Extended, "extended" }
 
 
-#[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+#[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
 fn retrieve_resource<'a>(code : &str, suffix : &str) -> Result<&'a [u8]> {
     let name = format!("{}.{}.bincode", code, suffix);
     let res : Option<ResourceId> = ResourceId::from_name(&name);
@@ -143,6 +159,14 @@ fn retrieve_resource<'a>(code : &str, suffix : &str) -> Result<&'a [u8]> {
         Some(data) => Ok(data.load()),
         None => Err(Error::Resource),
     }
+}
+
+#[cfg(feature = "embed_compressed")]
+fn decompress(bytes : &[u8]) -> Result<Vec<u8>> {
+    let mut decoder = GzDecoder::new(bytes);
+    let mut out = Vec::new();
+    decoder.read_to_end(&mut out).map_err(Error::Decompression)?;
+    Ok(out)
 }
 
 
@@ -160,6 +184,8 @@ pub enum Error {
         expected : Language,
         found :    Language,
     },
+    /// The embedded dictionary could not be decompressed.
+    Decompression(io::Error),
     /// The embedded dictionary could not be retrieved.
     Resource,
 }
@@ -169,6 +195,7 @@ impl error::Error for Error {
         match *self {
             Error::Deserialization(ref e) => Some(e),
             Error::IO(ref e) => Some(e),
+            Error::Decompression(ref e) => Some(e),
             _ => None,
         }
     }
@@ -186,6 +213,7 @@ Language mismatch: attempted to load a dictionary for `{}`, but found
 a dictionary for `{}` instead.",
                                                                   expected, found
             ),
+            Error::Decompression(ref e) => e.fmt(f),
             Error::Resource => f.write_str("the embedded dictionary could not be retrieved"),
         }
     }

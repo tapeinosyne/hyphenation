@@ -98,7 +98,7 @@ pub mod extended;
 pub mod hyphenator;
 pub mod iter;
 pub mod load;
-#[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
+#[cfg(any(feature = "embed_all", feature = "embed_selected", feature = "embed_en-us"))]
 mod resources;
 pub mod score;
 
