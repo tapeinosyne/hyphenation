@@ -17,7 +17,7 @@ buffers – usually, file buffers.
 use std::io;
 use std::fs::File;
 
-let path_to_dict = "/path/to/english-dictionary.bincode";
+let path_to_dict = "/path/to/english-dictionary.rkyv";
 let dict_file = File::open(path_to_dict) ?;
 let mut reader = io::BufReader::new(dict_file);
 let english_us = Standard::from_reader(Language::EnglishUS, &mut reader) ?;
@@ -27,7 +27,7 @@ Dictionaries can be loaded from the file system rather more succintly with
 the [`from_path`] shorthand:
 
 ```ignore
-let path_to_dict = "/path/to/english-dictionary.bincode";
+let path_to_dict = "/path/to/english-dictionary.rkyv";
 let english_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
 ```
 
@@ -60,7 +60,8 @@ Note that embedding significantly increases the size of the compiled artifact.
 [`from_path`]: trait.Load.html#method.from_path
 */
 
-use bincode as bin;
+use rkyv::rancor::Error as DeError;
+use rkyv::util::AlignedVec;
 #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
 use crate::resources::ResourceId;
 use std::error;
@@ -99,13 +100,39 @@ pub trait Load: Sized {
     fn from_embedded(lang : Language) -> Result<Self>;
 }
 
+// `rkyv` requires its input to be suitably aligned, which neither arbitrary
+// readers nor embedded resources guarantee; the bytes are staged in an aligned
+// buffer before being validated and deserialized.
+fn from_bytes<T>(bytes : &[u8]) -> Result<T>
+    where T : rkyv::Archive,
+          T::Archived : rkyv::Deserialize<T, rkyv::api::high::HighDeserializer<DeError>>
+                        + for<'a> rkyv::bytecheck::CheckBytes<rkyv::api::high::HighValidator<'a,
+                                                                                               DeError>>
+{
+    let mut buffer = AlignedVec::<16>::with_capacity(bytes.len());
+    buffer.extend_from_slice(bytes);
+    Ok(rkyv::from_bytes::<T, DeError>(&buffer)?)
+}
+
+fn from_reader<T, R>(reader : &mut R) -> Result<T>
+    where R : io::Read,
+          T : rkyv::Archive,
+          T::Archived : rkyv::Deserialize<T, rkyv::api::high::HighDeserializer<DeError>>
+                        + for<'a> rkyv::bytecheck::CheckBytes<rkyv::api::high::HighValidator<'a,
+                                                                                               DeError>>
+{
+    let mut buffer = AlignedVec::<16>::new();
+    buffer.extend_from_reader(reader)?;
+    Ok(rkyv::from_bytes::<T, DeError>(&buffer)?)
+}
+
 macro_rules! impl_load {
     ($dict:ty, $suffix:expr) => {
         impl Load for $dict {
             fn from_reader<R>(lang : Language, reader : &mut R) -> Result<Self>
                 where R : io::Read
             {
-                let dict : Self = bin::deserialize_from(reader)?;
+                let dict : Self = from_reader(reader)?;
                 let (found, expected) = (dict.language(), lang);
                 if found != expected {
                     Err(Error::LanguageMismatch { expected, found })
@@ -117,14 +144,14 @@ macro_rules! impl_load {
             fn any_from_reader<R>(reader : &mut R) -> Result<Self>
                 where R : io::Read
             {
-                let dict : Self = bin::deserialize_from(reader)?;
+                let dict : Self = from_reader(reader)?;
                 Ok(dict)
             }
 
             #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
             fn from_embedded(lang : Language) -> Result<Self> {
                 let dict_bytes = retrieve_resource(lang.code(), $suffix)?;
-                let dict = bin::deserialize(dict_bytes)?;
+                let dict = from_bytes(dict_bytes)?;
                 Ok(dict)
             }
         }
@@ -137,7 +164,7 @@ impl_load! { Extended, "extended" }
 
 #[cfg(any(feature = "embed_all", feature = "embed_en-us"))]
 fn retrieve_resource<'a>(code : &str, suffix : &str) -> Result<&'a [u8]> {
-    let name = format!("{}.{}.bincode", code, suffix);
+    let name = format!("{}.{}.rkyv", code, suffix);
     let res : Option<ResourceId> = ResourceId::from_name(&name);
     match res {
         Some(data) => Ok(data.load()),
@@ -152,7 +179,7 @@ pub type Result<T> = result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     /// The dictionary could not be deserialized.
-    Deserialization(bin::Error),
+    Deserialization(DeError),
     /// The dictionary could not be read.
     IO(io::Error),
     /// The loaded dictionary is for the wrong language.
@@ -195,6 +222,6 @@ impl From<io::Error> for Error {
     fn from(err : io::Error) -> Error { Error::IO(err) }
 }
 
-impl From<bin::Error> for Error {
-    fn from(err : bin::Error) -> Error { Error::Deserialization(err) }
+impl From<DeError> for Error {
+    fn from(err : DeError) -> Error { Error::Deserialization(err) }
 }

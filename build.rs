@@ -4,13 +4,11 @@
 #[cfg(any(feature = "nfc", feature = "nfd", feature = "nfkc", feature = "nfkd"))]
 extern crate unicode_normalization;
 
-extern crate bincode;
+extern crate rkyv;
 extern crate fst;
 extern crate hyphenation_commons;
-extern crate serde;
 
-use bincode as bin;
-use serde::ser;
+use rkyv::rancor::Error as SerError;
 use std::collections::HashMap;
 use std::env;
 use std::error;
@@ -115,7 +113,7 @@ impl Paths {
     }
 
     fn dict_name(lang : Language, suffix : &str) -> String {
-        format!("{}.{}.bincode", lang.code(), suffix)
+        format!("{}.{}.rkyv", lang.code(), suffix)
     }
 }
 
@@ -148,10 +146,13 @@ impl Build for ext::Patterns {
 
 
 fn write<T>(item : &T, path : &Path) -> Result<(), Error>
-    where T : ser::Serialize
+    where T : for<'a> rkyv::Serialize<rkyv::api::high::HighSerializer<rkyv::util::AlignedVec,
+                                                                       rkyv::ser::allocator::ArenaHandle<'a>,
+                                                                       SerError>>
 {
+    let bytes = rkyv::to_bytes::<SerError>(item)?;
     let mut buffer = File::create(&path).map(io::BufWriter::new)?;
-    bin::serialize_into(&mut buffer, item)?;
+    buffer.write_all(&bytes)?;
     Ok(())
 }
 
@@ -331,7 +332,7 @@ pub enum Error {
     Build(fst::Error),
     Env(env::VarError),
     IO(io::Error),
-    Serialization(bin::Error),
+    Serialization(SerError),
     Resource, // TODO: Parsing
 }
 
@@ -367,8 +368,8 @@ impl From<env::VarError> for Error {
     fn from(err : env::VarError) -> Error { Error::Env(err) }
 }
 
-impl From<bin::Error> for Error {
-    fn from(err : bin::Error) -> Error { Error::Serialization(err) }
+impl From<SerError> for Error {
+    fn from(err : SerError) -> Error { Error::Serialization(err) }
 }
 
 impl From<fst::Error> for Error {

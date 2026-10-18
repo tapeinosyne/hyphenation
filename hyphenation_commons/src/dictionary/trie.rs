@@ -1,7 +1,10 @@
 use fst::raw;
 use fst::Map;
-use serde::de::{self, Deserialize, Deserializer, Visitor};
-use serde::ser::{Serialize, Serializer};
+use rkyv::rancor::{Fallible, Source as RkyvSource};
+use rkyv::ser::{Allocator, Writer};
+use rkyv::vec::{ArchivedVec, VecResolver};
+use rkyv::with::{ArchiveWith, DeserializeWith, SerializeWith};
+use rkyv::Place;
 
 use std::convert::From;
 use std::error;
@@ -86,50 +89,33 @@ impl From<fst::Map<Vec<u8>>> for Trie {
 Serialization
 */
 
-#[derive(Copy, Clone, Debug)]
-struct FstVisitor;
+/// Archives a [`Trie`] as the raw bytes of its underlying FST.
+pub struct TrieAsBytes;
 
-const NOM_DE_SER : &str = "Trie";
+impl ArchiveWith<Trie> for TrieAsBytes {
+    type Archived = ArchivedVec<u8>;
+    type Resolver = VecResolver;
 
-impl<'de> Visitor<'de> for FstVisitor {
-    type Value = Trie;
-
-    fn expecting(&self, f : &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("the internal trie of a hyphenation dictionary")
-    }
-
-    fn visit_bytes<E>(self, bs : &[u8]) -> Result<Self::Value, E>
-        where E : de::Error
-    {
-        Trie::from_bytes(bs.to_vec()).map_err(E::custom)
-    }
-
-    fn visit_byte_buf<E>(self, bs : Vec<u8>) -> Result<Self::Value, E>
-        where E : de::Error
-    {
-        Trie::from_bytes(bs).map_err(E::custom)
-    }
-
-    fn visit_newtype_struct<D>(self, de : D) -> Result<Self::Value, D::Error>
-        where D : Deserializer<'de>
-    {
-        de.deserialize_bytes(FstVisitor)
+    fn resolve_with(field : &Trie, resolver : Self::Resolver, out : Place<Self::Archived>) {
+        ArchivedVec::resolve_from_slice(field.as_bytes(), resolver, out);
     }
 }
 
-impl Serialize for Trie {
-    fn serialize<S>(&self, ser : S) -> Result<S::Ok, S::Error>
-        where S : Serializer
-    {
-        ser.serialize_newtype_struct(NOM_DE_SER, self.as_bytes())
+impl<S> SerializeWith<Trie, S> for TrieAsBytes
+    where S : Fallible + Allocator + Writer + ?Sized,
+          S::Error : RkyvSource
+{
+    fn serialize_with(field : &Trie, serializer : &mut S) -> Result<Self::Resolver, S::Error> {
+        ArchivedVec::serialize_from_slice(field.as_bytes(), serializer)
     }
 }
 
-impl<'de> Deserialize<'de> for Trie {
-    fn deserialize<D>(de : D) -> Result<Self, D::Error>
-        where D : Deserializer<'de>
-    {
-        de.deserialize_newtype_struct(NOM_DE_SER, FstVisitor)
+impl<D> DeserializeWith<ArchivedVec<u8>, Trie, D> for TrieAsBytes
+    where D : Fallible + ?Sized,
+          D::Error : RkyvSource
+{
+    fn deserialize_with(field : &ArchivedVec<u8>, _ : &mut D) -> Result<Trie, D::Error> {
+        Trie::from_bytes(field.to_vec()).map_err(D::Error::new)
     }
 }
 

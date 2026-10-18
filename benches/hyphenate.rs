@@ -1,5 +1,4 @@
 extern crate once_cell;
-extern crate bincode;
 extern crate criterion;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
@@ -16,13 +15,13 @@ use hyphenation::*;
 
 
 fn fiat_std(lang : Language) -> Standard {
-    let filename = format!("{}.standard.bincode", lang.code());
+    let filename = format!("{}.standard.rkyv", lang.code());
     let file = File::open(Path::new("dictionaries").join(filename)).unwrap();
     Standard::from_reader(lang, &mut BufReader::new(file)).unwrap()
 }
 
 fn fiat_ext(lang : Language) -> Extended {
-    let filename = format!("{}.extended.bincode", lang.code());
+    let filename = format!("{}.extended.rkyv", lang.code());
     let file = File::open(Path::new("dictionaries").join(filename)).unwrap();
     Extended::from_reader(lang, &mut BufReader::new(file)).unwrap()
 }

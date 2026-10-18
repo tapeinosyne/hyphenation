@@ -1,5 +1,6 @@
 //! Available languages and related data.
 
+use rkyv::{Archive, Deserialize, Serialize};
 use std::fmt;
 
 macro_rules! fiant_linguae {
@@ -8,7 +9,7 @@ macro_rules! fiant_linguae {
     };
     ( $($lang:ident, $bounds:expr, $code:expr);* ) => {
         /// The set of languages available for hyphenation.
-        #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+        #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Archive, Serialize, Deserialize)]
         pub enum Language {
             $( $lang, )*
         }

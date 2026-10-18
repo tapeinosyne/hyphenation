@@ -1,5 +1,10 @@
 # `hyphenation`
 
+## Unreleased
+
+Dictionaries are now serialized with [`rkyv`](https://rkyv.org) instead of `bincode`. **Breaking:** dictionary files now use the `.rkyv` extension and the old `.bincode` files can no longer be loaded; rebuild them with the `build_dictionaries` feature.
+
+
 ## 0.8.4
 
 Added a fallible `try_from_code` method to obtain a `hyphenation::Language` from [BCP 47](https://tools.ietf.org/html/bcp47) tags. (Contributed by [Tuomas Laakkonen](https://github.com/tuomas56))

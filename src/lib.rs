@@ -20,7 +20,7 @@ must still be loaded into memory. The most convenient way to do so is the
 ```ignore
 use hyphenation::Load;
 
-let path_to_dict = "/path/to/english-dictionary.bincode";
+let path_to_dict = "/path/to/english-dictionary.rkyv";
 let en_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
 ```
 
@@ -88,7 +88,7 @@ hyphen on new lines).
 
 #![forbid(unsafe_code)]
 
-extern crate bincode;
+extern crate rkyv;
 extern crate fst;
 extern crate hyphenation_commons;
 

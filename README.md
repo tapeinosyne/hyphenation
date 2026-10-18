@@ -63,13 +63,13 @@ assert_eq!(uppercase, vec!["CAP", "I", "TAL"]);
 The current set of available dictionaries amounts to ~2.8MB of data. Although embedding them is an option, most applications should prefer to load individual dictionaries at runtime, like so:
 
 ```rust
-let path_to_dict = "/path/to/en-us.bincode";
+let path_to_dict = "/path/to/en-us.rkyv";
 let english_us = Standard::from_path(Language::EnglishUS, path_to_dict) ?;
 ```
 
 Or to embed them individually with [`include_bytes!`](https://doc.rust-lang.org/std/macro.include_bytes.html):
 ```rust
-let bytes = include_bytes!("./relative_path_to_dict_from_source_file/de-1996.standard.bincode");
+let bytes = include_bytes!("./relative_path_to_dict_from_source_file/de-1996.standard.rkyv");
 let mut cursor = std::io::Cursor::new(bytes);
 let german_de = Standard::any_from_reader(&mut cursor)?;
 ```

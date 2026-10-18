@@ -16,13 +16,13 @@ use hyphenation::Language::*;
 use hyphenation::*;
 
 fn fiat_std(lang : Language) -> Standard {
-    let filename = format!("{}.standard.bincode", lang.code());
+    let filename = format!("{}.standard.rkyv", lang.code());
     let file = File::open(Path::new("dictionaries").join(filename)).unwrap();
     Standard::from_reader(lang, &mut BufReader::new(file)).unwrap()
 }
 
 fn fiat_ext(lang : Language) -> Extended {
-    let filename = format!("{}.extended.bincode", lang.code());
+    let filename = format!("{}.extended.rkyv", lang.code());
     let file = File::open(Path::new("dictionaries").join(filename)).unwrap();
     Extended::from_reader(lang, &mut BufReader::new(file)).unwrap()
 }
@@ -148,7 +148,7 @@ fn special_casing() {
 
 #[test]
 fn language_mismatch_on_load() {
-    let file = File::open("./dictionaries/mul-ethi.standard.bincode").unwrap();
+    let file = File::open("./dictionaries/mul-ethi.standard.rkyv").unwrap();
     let mut reader = BufReader::new(file);
     assert!(Standard::from_reader(EnglishUS, &mut reader).is_err());
 }
