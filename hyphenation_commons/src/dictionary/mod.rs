@@ -7,21 +7,23 @@ use std::collections::HashMap;
 use std::hash::Hash;
 
 use crate::dictionary::trie::PrefixMatches;
-pub use crate::dictionary::trie::{Error, Trie};
+pub use crate::dictionary::trie::{Error, Trie, TrieAsBytes};
 use crate::language::Language;
 use crate::parse::Parse;
+use rkyv::{Archive, Deserialize, Serialize};
 
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash, Archive, Serialize, Deserialize)]
 pub struct Locus {
     pub index : u8,
     pub value : u8,
 }
 
 /// A trie mapping hyphenation patterns to their tallies.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Archive, Serialize, Deserialize)]
 pub struct Patterns {
     tallies :   Vec<Vec<Locus>>,
+    #[rkyv(with = TrieAsBytes)]
     automaton : Trie,
 }
 
@@ -36,14 +38,14 @@ impl Patterns {
 }
 
 /// A specialized hashmap associating words to their known hyphenation.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct Exceptions(pub HashMap<String, Vec<usize>>);
 
 /// A dictionary for standard Knuth–Liang hyphenation.
 ///
 /// It comprises the working language, the pattern and exception sets,
 /// and the character boundaries for hyphenation.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Archive, Serialize, Deserialize)]
 pub struct Standard {
     language :       Language,
     patterns :       Patterns,

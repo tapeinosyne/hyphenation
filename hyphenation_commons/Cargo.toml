@@ -13,4 +13,4 @@ description = "Proemial code for the `hyphenation` library"
 
 [dependencies]
 fst = "0.4"
-serde = { version = "1.0", features = ["derive"] }
+rkyv = "0.8.18"

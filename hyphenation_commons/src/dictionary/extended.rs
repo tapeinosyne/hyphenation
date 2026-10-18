@@ -6,13 +6,14 @@ Data structures for extended hyphenation[1].
 
 use std::collections::HashMap;
 
-use crate::dictionary::trie::{self, Trie};
+use crate::dictionary::trie::{self, Trie, TrieAsBytes};
 use crate::dictionary::{uniques, Locus, PrefixTallies};
 use crate::language::Language;
 use crate::parse::Parse;
+use rkyv::{Archive, Deserialize, Serialize};
 
 /// The partial score carried by an extended hyphenation pattern.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Archive, Serialize, Deserialize)]
 pub struct Tally {
     /// The pattern tally, equivalent to that found in standard patterns.
     pub standard :  Vec<Locus>,
@@ -22,7 +23,7 @@ pub struct Tally {
 }
 
 /// Word alterations extending a standard Knuth–Liang pattern.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Archive, Serialize, Deserialize)]
 pub struct Subregion {
     /// The number of bytes that the substitution will replace before the break.
     pub left :         usize,
@@ -37,9 +38,10 @@ pub struct Subregion {
 }
 
 /// A trie mapping hyphenation patterns to their extended tallies.
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Archive, Serialize, Deserialize)]
 pub struct Patterns {
     tallies :   Vec<Tally>,
+    #[rkyv(with = TrieAsBytes)]
     automaton : Trie,
 }
 
@@ -55,7 +57,7 @@ impl Patterns {
 
 
 /// A specialized hashmap associating words to their known hyphenation.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub struct Exceptions(pub HashMap<String, Vec<(usize, Option<Subregion>)>>);
 
 /// A dictionary for extended Knuth–Liang hyphenation, based on the strategy
@@ -64,7 +66,7 @@ pub struct Exceptions(pub HashMap<String, Vec<(usize, Option<Subregion>)>>);
 ///
 /// It comprises the working language, the set of extended patterns and
 /// exceptions, and the character boundaries for hyphenation.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Archive, Serialize, Deserialize)]
 pub struct Extended {
     language :       Language,
     patterns :       Patterns,
